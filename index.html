@@ -230,7 +230,7 @@ var SCOL={'Taken':'#42be65','Approved':'#4589ff','Requested':'#f1c21b','Cancelle
 /* Trip colors (Q45): six clearly different hues, no reds/pinks (cherry red is reserved for PTO Burndown).
    Assigned in list order so a trip never shares a color with the trip before it in the same year;
    a trip spanning two years keeps one color on both tabs. */
-var TCOL=['#4589ff','#ff832b','#3ddbd9','#f1c21b','#a56eff','#42be65'];
+var TCOL=['#1f6fff','#ffcc00','#00b86b','#ff7b00','#7d3cff','#00c2c7'];  /* Primary Punch (Q46): cobalt, sunflower, emerald, tangerine, grape, aqua */
 var BURN_COL='#D2042D', colorMap=null, colorKey='';
 function tripYears(t){var ys={};t.days.forEach(function(d){ys[yr(d.date)]=1;});if(!t.days.length)ys[t.year]=1;return Object.keys(ys);}
 function buildColors(){
