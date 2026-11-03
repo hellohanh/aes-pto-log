@@ -93,17 +93,20 @@ header.masthead{border-bottom:2px solid var(--accent);padding-bottom:18px;margin
 .ledger-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px}
 .ledger-bar .sp{flex:1}
 .ledger{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;background:#1c1c1c;border:1px solid var(--line);border-radius:10px}
-.ledger th:first-child{border-top-left-radius:10px}.ledger th:last-child{border-top-right-radius:10px}
+.ledger th:first-child,.ledger th:last-child{border-radius:0}  /* square: rounded corners let rows peek through when the header is stuck */
+.ledger{border-top-left-radius:0;border-top-right-radius:0}
+.newtrip .ledger,.newtrip .ledger th{border-radius:0}
 .ledger tr:last-child td:first-child{border-bottom-left-radius:10px}.ledger tr:last-child td:last-child{border-bottom-right-radius:10px}
-.ledger th{position:sticky;top:51px;z-index:5;background:#202020;text-align:center;color:var(--ink-soft);font-weight:800;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--line-2);padding:9px 8px;line-height:1.25;white-space:normal}
+.ledger th{position:sticky;top:var(--hdrH,51px);z-index:5;background:#202020;text-align:center;color:var(--ink-soft);font-weight:800;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--line-2);padding:9px 8px;line-height:1.25;white-space:normal}
 .ledger th.l{text-align:left}
 .ledger td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:middle;text-align:center}
 .ledger td.l{text-align:left}
 .ledger td.n{font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12.5px}
 .ledger tr:last-child td{border-bottom:none}
 .ledger .c-rng{width:150px}.ledger .c-hrs{width:76px}.ledger .c-st{width:128px}.ledger .c-bal{width:96px}.ledger .c-act{width:92px}
-tr.start td{background:rgba(255,255,255,.05);font-weight:700}
-tr.start td.n{color:var(--ink)}
+tr.start td{background:#E1AD01;color:#000;font-weight:700}
+tr.start td.n{color:#000}
+tr.start td.neg{color:#8b0000!important}  /* negatives stay readable on mustard */
 tr.trip td{background:color-mix(in srgb,var(--tc) 13%,#1c1c1c);font-weight:700;border-top:1px solid color-mix(in srgb,var(--tc) 35%,transparent)}
 tr.trip td:first-child{box-shadow:inset 3px 0 0 var(--tc)}
 tr.trip td.n{color:var(--ink-soft);font-weight:400}
@@ -139,6 +142,12 @@ td.dt.edit span{display:none}
 .blurb-copy.done{background:#238636;border-color:#238636;color:#fff}
 .trip-copy{margin-left:auto;border-radius:12px;padding:4px 12px}
 .yr-top{align-items:start}
+/* sticky header block (tabs + setup + tiles + calendar) — opaque, so the ledger never bleeds through */
+.yr-top{position:sticky;top:var(--tabH,51px);z-index:40;margin-top:-22px;padding:22px 0 14px;
+  background-color:var(--paper);background-image:radial-gradient(circle at 1px 1px, rgba(244,244,244,.04) 1px, transparent 0);background-size:22px 22px;background-attachment:fixed}
+.tabbar{background-image:radial-gradient(circle at 1px 1px, rgba(244,244,244,.04) 1px, transparent 0);background-size:22px 22px;background-attachment:fixed}
+.ledger tr,#ntPanel{scroll-margin-top:calc(var(--hdrH,51px) + 48px)}
+.ledger-scroll{margin-top:2px}
 .lcol{display:flex;flex-direction:column;gap:14px;align-items:flex-start}
 .lcol .setup{align-self:stretch}
 .rcol{display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -190,7 +199,7 @@ tr.flash td{animation:flash 2.4s ease-out}
 #modal .mb{display:flex;gap:8px;justify-content:flex-end}
 #modal .mb button{font-size:12px;padding:7px 16px}
 
-@media(max-width:760px){.brand h1{font-size:30px}.tabbar{position:static}.ledger th{top:0}.wrap{padding:20px 16px 60px}.ledger-scroll{overflow-x:auto}}
+@media(max-width:760px){.brand h1{font-size:30px}.tabbar{position:static}.yr-top{position:static;margin-top:0;padding:0}.ledger th{top:0}.wrap{padding:20px 16px 60px}.ledger-scroll{overflow-x:auto}}
 </style>
 </head>
 <body>
@@ -365,7 +374,16 @@ function show(y){
   try{localStorage.setItem(TABKEY,y);}catch(e){}
   renderAll();
 }
-function renderAll(){memo={};YEARS.forEach(render);stat();}
+function renderAll(){memo={};YEARS.forEach(render);stat();stickyMetrics();}
+/* sticky offsets: the ledger header sits right under the frozen block */
+function stickyMetrics(){
+  var tb=document.getElementById('tabbar'),yt=document.querySelector('.page.on .yr-top'),st=document.documentElement.style;
+  var tabH=tb.offsetHeight,fixed=getComputedStyle(tb).position==='sticky';
+  st.setProperty('--tabH',tabH+'px');
+  st.setProperty('--hdrH',(fixed&&yt&&getComputedStyle(yt).position==='sticky'?tabH+yt.offsetHeight:0)+'px');
+}
+window.addEventListener('resize',stickyMetrics);
+if(window.ResizeObserver)new ResizeObserver(stickyMetrics).observe(document.getElementById('pages'));
 
 function setupHtml(y,r){
   var s=ysettings(y);
@@ -459,7 +477,7 @@ function saveDraft(){
   if(at<0)at=S.trips.length;
   S.trips.splice(at,0,t);draft=null;flashId=t.id;save();
   if(t.year!==active)show(t.year);else renderAll();
-  var row=document.querySelector('#page-'+t.year+' tr[data-id="'+t.id+'"]');if(row)row.scrollIntoView({block:'center',behavior:'smooth'});
+  var row=document.querySelector('#page-'+t.year+' tr[data-id="'+t.id+'"]');if(row)row.scrollIntoView({block:'start',behavior:'smooth'});
   setTimeout(function(){flashId=null;},2500);
 }
 /* ── PTO Burndown: Fridays only (Q30–Q33) ── */
@@ -542,7 +560,7 @@ function calJump(i,j){
   var t=S.trips[i],d=t&&t.days[j];if(!d)return;var y=yr(d.date);
   if(y!==active&&YEARS.indexOf(y)>-1)show(y);
   var row=document.querySelector('#page-'+y+' tr.day[data-t="'+i+'"][data-d="'+j+'"]');if(!row)return;
-  row.scrollIntoView({block:'center',behavior:'smooth'});row.classList.remove('flash');void row.offsetWidth;row.classList.add('flash');
+  row.scrollIntoView({block:'start',behavior:'smooth'});row.classList.remove('flash');void row.offsetWidth;row.classList.add('flash');
 }
 
 /* ── modal ── */
