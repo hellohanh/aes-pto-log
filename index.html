@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AES PTO Log</title>
+<style>
+:root{
+  --paper:#161616; --paper-2:#0d0d0d; --ink:#f4f4f4; --ink-soft:#a8a8a8;
+  --line:#393939; --line-2:#525252; --accent:#4589ff; --accent-2:#4589ff; --accent-hi:#78a9ff;
+  --good:#42be65; --warn:#ff832b; --alarm:#fa4d56;
+  --card:#262626; --card-2:#333333;
+  --cp-yellow:#f1c21b; --base-red:#8e0000; --base-red-lt:#ff0f0f; --amazon-orange:#ff9900;
+  --hd:'Segoe UI Black','Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;
+  --ui:'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--ui);-webkit-font-smoothing:antialiased}
+body{background-image:radial-gradient(circle at 1px 1px, rgba(244,244,244,.04) 1px, transparent 0);background-size:22px 22px}
+.wrap{max-width:1180px;margin:0 auto;padding:32px 28px 80px}
+header.masthead{border-bottom:2px solid var(--accent);padding-bottom:18px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px}
+.brand{display:flex;align-items:center;gap:16px}
+.brand .logo{height:52px;width:auto;flex:none;display:block;border-radius:8px}
+.brand h1{font-family:var(--hd);font-weight:900;font-size:40px;line-height:.95;letter-spacing:-.01em;margin:0;color:var(--ink)}
+.brand .sub{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);margin-top:8px}
+.savestat{font-size:11.5px;color:var(--ink-soft);text-align:right;line-height:1.5}
+.savestat b{color:var(--good);font-weight:700}
+.savestat.warn b{color:var(--warn)}
+.savestat .ghbtn{font-size:12px;padding:7px 16px}
+.savestat .ghbtn.dirty{box-shadow:0 0 0 2px var(--cp-yellow)}
+.savestat .ghbtn:disabled{opacity:.6;cursor:progress}
+.savestat .gl{margin-top:6px}
+.savestat .gl .dw{color:var(--cp-yellow)}
+.linkbtn{background:none;border:none;color:var(--ink-soft);font:600 10.5px var(--ui);cursor:pointer;padding:0;text-decoration:underline}
+.linkbtn:hover{color:var(--accent-hi)}
+#tokModal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.62);padding:20px}
+#tokModal.show{display:flex}
+#tokModal .box{background:var(--card);border:1px solid var(--line-2);border-left:4px solid var(--accent);border-radius:10px;max-width:480px;width:100%;padding:20px 22px;box-shadow:0 12px 44px rgba(0,0,0,.55)}
+#tokModal .mh{font-weight:800;font-size:15px;margin-bottom:9px;color:var(--accent-hi)}
+#tokModal ol{margin:0 0 14px;padding-left:20px;font-size:13px;line-height:1.6;color:var(--ink)}
+#tokModal a{color:var(--accent-hi)}
+#tokModal input{width:100%;background:#1c1c1c;border:1px solid var(--line-2);border-radius:6px;padding:8px 10px;color:var(--ink);font:13px var(--mono);outline:none;margin-bottom:6px}
+#tokModal input:focus{border-color:var(--accent)}
+#tokModal .tn{font-size:11.5px;color:var(--ink-soft);margin-bottom:16px;line-height:1.45}
+#tokModal .mb{display:flex;gap:8px;justify-content:flex-end}
+#tokModal .mb .sp{flex:1}
+#tokModal .mb button{font-size:12px;padding:7px 16px}
+
+/* ── Tab bar ── */
+.tabbar{display:flex;gap:4px;flex-wrap:wrap;margin:18px 0 0;position:sticky;top:0;z-index:60;background:var(--paper);padding:10px 0 0;border-bottom:1px solid var(--line)}
+.tab{font-family:var(--ui);font-size:12.5px;font-weight:700;letter-spacing:.02em;border:none;background:transparent;color:var(--ink-soft);padding:10px 16px 12px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.12s;white-space:nowrap;border-radius:6px 6px 0 0}
+.tab:hover{color:var(--ink);background:rgba(255,255,255,.03)}
+.tab.on{color:var(--ink);border-bottom-color:var(--cp-yellow)}
+.page{display:none;margin-top:22px}
+.page.on{display:block}
+
+/* ── Cards / buttons (Sales Aid) ── */
+.calc{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.35)}
+.calc-h{font:800 17px var(--hd);letter-spacing:.02em;margin-bottom:2px}
+.calc-sub{color:var(--ink-soft);font-size:12.5px;margin-bottom:12px}
+.cbtn{font-family:var(--ui);font-size:10.5px;font-weight:700;letter-spacing:.04em;border:1px solid var(--line-2);background:transparent;color:var(--ink-soft);padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:.12s}
+.cbtn:hover{border-color:var(--accent);color:var(--ink)}
+.cbtn-clear{background:#238636;border-color:#238636;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.cbtn-clear:hover{background:#2ea043;border-color:#2ea043;color:#fff}
+.cbtn-print{background:#8e0000;border-color:#8e0000;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.cbtn-print:hover{background:#a30000;border-color:#a30000;color:#fff}
+.addtrip{background:transparent;border:1px dashed var(--cp-yellow);color:var(--cp-yellow);padding:6px 14px;border-radius:6px;cursor:pointer;font:700 12px var(--ui)}
+.addtrip:hover{background:rgba(241,194,27,.08)}
+
+/* ── Year setup + summary ── */
+.yr-top{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:900px){.yr-top{grid-template-columns:1fr}}
+.setup{border-left-color:var(--cp-yellow)}
+.setup-grid{display:flex;flex-wrap:wrap;gap:12px 16px}
+.field{display:flex;flex-direction:column;gap:4px;width:150px}
+.field label{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;margin-left:5px}
+.field input{background:#1c1c1c;border:1px solid var(--line-2);border-radius:6px;padding:7px 9px;color:var(--ink);font-size:13px;font-family:var(--ui);outline:none;width:100%;font-variant-numeric:tabular-nums}
+.field input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(69,137,255,.18)}
+.field input[readonly]{background:transparent;border-style:dashed;color:var(--ink-soft)}
+.field input.ov{border-color:var(--warn)}
+.field .hint{font-size:10.5px;color:var(--ink-soft);margin-left:5px;min-height:14px}
+.field .hint button{background:none;border:none;color:var(--accent);font:600 10.5px var(--ui);cursor:pointer;padding:0;text-decoration:underline}
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-self:start}
+@media(max-width:700px){.tiles{grid-template-columns:repeat(2,1fr)}}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;gap:6px}
+.tile .tl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;line-height:1.3}
+.tile .tv{font:800 26px var(--hd);font-variant-numeric:tabular-nums;color:var(--ink)}
+.tile .tv small{font:600 11px var(--ui);color:var(--ink-soft);margin-left:4px}
+.tile.end .tv{color:var(--cp-yellow)}
+.neg{color:var(--alarm)!important}
+
+/* ── Ledger toolbar + table ── */
+.ledger-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.ledger-bar .sp{flex:1}
+.ledger{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;background:#1c1c1c;border:1px solid var(--line);border-radius:10px}
+.ledger th:first-child{border-top-left-radius:10px}.ledger th:last-child{border-top-right-radius:10px}
+.ledger tr:last-child td:first-child{border-bottom-left-radius:10px}.ledger tr:last-child td:last-child{border-bottom-right-radius:10px}
+.ledger th{position:sticky;top:51px;z-index:5;background:#202020;text-align:center;color:var(--ink-soft);font-weight:800;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--line-2);padding:9px 8px;line-height:1.25;white-space:normal}
+.ledger th.l{text-align:left}
+.ledger td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:middle;text-align:center}
+.ledger td.l{text-align:left}
+.ledger td.n{font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12.5px}
+.ledger tr:last-child td{border-bottom:none}
+.ledger .c-rng{width:150px}.ledger .c-hrs{width:76px}.ledger .c-st{width:128px}.ledger .c-bal{width:96px}.ledger .c-act{width:92px}
+tr.start td{background:rgba(255,255,255,.05);font-weight:700}
+tr.start td.n{color:var(--ink)}
+tr.trip td{background:color-mix(in srgb,var(--tc) 13%,#1c1c1c);font-weight:700;border-top:1px solid color-mix(in srgb,var(--tc) 35%,transparent)}
+tr.trip td:first-child{box-shadow:inset 3px 0 0 var(--tc)}
+tr.trip td.n{color:var(--ink-soft);font-weight:400}
+tr.day td:first-child{box-shadow:inset 3px 0 0 color-mix(in srgb,var(--tc) 45%,transparent)}
+tr.day:hover td{background:rgba(255,255,255,.025)}
+tr.day.cx td.dt span{text-decoration:line-through;color:var(--ink-soft)}
+.ti{background:transparent;border:1px solid transparent;border-radius:5px;color:var(--ink);font:inherit;padding:4px 6px;width:100%;outline:none}
+.ti:hover{border-color:var(--line-2)}
+.ti:focus{border-color:var(--accent);background:#161616}
+.ti.rng{text-transform:uppercase;text-align:center;letter-spacing:.02em}
+.ti.hrs{text-align:center;font-family:var(--mono);font-size:12.5px;-moz-appearance:textfield}
+.ti.hrs::-webkit-inner-spin-button,.ti.hrs::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.tname{display:flex;align-items:center;gap:8px}
+.tname .ti{flex:none;width:auto;max-width:100%;font-weight:700;field-sizing:content;min-width:10ch}
+.thrs{flex:none;font-weight:700;color:var(--tc);font-size:12.5px;white-space:nowrap}
+.span-b{flex:none;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);border:1px solid var(--line-2);border-radius:10px;padding:2px 8px;font-weight:700;white-space:nowrap}
+td.dt{position:relative;cursor:pointer}
+td.dt span{display:inline-block;padding:4px 6px;border:1px solid transparent;border-radius:5px}
+td.dt:hover span{border-color:var(--line-2)}
+td.dt input{position:absolute;left:8px;bottom:4px;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
+td.dt.edit input{position:static;width:auto;height:auto;opacity:1;pointer-events:auto;background:#161616;border:1px solid var(--accent);border-radius:5px;color:var(--ink);padding:3px 6px;font:inherit;color-scheme:dark}
+td.dt.edit span{display:none}
+.st{appearance:none;-webkit-appearance:none;background:transparent;border:1px solid var(--line-2);border-radius:12px;color:var(--sc,var(--ink-soft));font:700 11px var(--ui);letter-spacing:.03em;padding:3px 10px;cursor:pointer;outline:none;text-align:center;text-align-last:center;width:112px}
+.st:hover,.st:focus{border-color:var(--sc,var(--accent))}
+.st.empty{border-style:dashed;color:var(--line-2)}
+.st option{background:#262626;color:var(--ink)}
+.acts{display:flex;gap:4px;justify-content:flex-end}
+.ib{background:transparent;border:1px solid var(--line);color:var(--ink-soft);border-radius:5px;font:700 10.5px var(--ui);padding:3px 7px;cursor:pointer;white-space:nowrap}
+.ib:hover{border-color:var(--accent);color:var(--ink)}
+.ib.del:hover{border-color:var(--alarm);color:var(--alarm)}
+.blurb-copy{font-family:var(--ui);font-size:11px;font-weight:700;letter-spacing:.04em;border:1px solid #1C4587;background:#1C4587;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7);padding:5px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:.12s;flex:none}
+.blurb-copy:hover{background:#2A5BA6;border-color:#2A5BA6;color:#fff}
+.blurb-copy.done{background:#238636;border-color:#238636;color:#fff}
+.trip-copy{margin-left:auto;border-radius:12px;padding:4px 12px}
+.empty-yr{padding:30px;text-align:center;color:var(--ink-soft);font-size:13px}
+.addtrip:disabled{opacity:.35;cursor:default;background:transparent}
+.cbtn-save{background:#4589ff;border-color:#4589ff;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.cbtn-save:hover{background:#78a9ff;border-color:#78a9ff;color:#fff}
+.newtrip{border-left-color:var(--cp-yellow);margin:0 0 16px;--tc:var(--cp-yellow)}
+.nt-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.newtrip .ledger th{position:static}
+.newtrip .ledger{margin-top:4px}
+.ti.date{color-scheme:dark;width:auto;font-variant-numeric:tabular-nums}
+.ti.bad,.ti.bad:hover{border-color:var(--alarm)}
+.nt-actions{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.nt-actions .sp{flex:1}
+.nf-warn{color:var(--warn);font-size:11px;font-weight:700;margin-left:6px;white-space:nowrap}
+.nt-err{color:var(--alarm);font-size:12px;font-weight:600}
+.nt-actions .cbtn{font-size:12px;padding:6px 14px}
+tr.flash td{animation:flash 2.4s ease-out}
+@keyframes flash{0%,35%{background:rgba(241,194,27,.28)}}
+
+/* ── Modal ── */
+#modal{position:fixed;inset:0;z-index:999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.62);padding:20px}
+#modal.show{display:flex}
+#modal .box{background:var(--card);border:1px solid var(--line-2);border-left:4px solid var(--alarm);border-radius:10px;max-width:430px;padding:20px 22px;box-shadow:0 12px 44px rgba(0,0,0,.55)}
+#modal .mh{font-weight:800;font-size:15px;margin-bottom:9px;color:var(--alarm)}
+#modal .mm{font-size:13.5px;line-height:1.5;color:var(--ink);margin-bottom:18px}
+#modal .mb{display:flex;gap:8px;justify-content:flex-end}
+#modal .mb button{font-size:12px;padding:7px 16px}
+
+@media(max-width:760px){.brand h1{font-size:30px}.tabbar{position:static}.ledger th{top:0}.wrap{padding:20px 16px 60px}.ledger-scroll{overflow-x:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 157 146" role="img" aria-label="Astronics A logo"><title>Astronics A logo</title><rect x="0" y="0" width="157" height="146" rx="16" fill="#ffffff" stroke="#e6e6e6" stroke-width="1"/><path fill="#052d5e" fill-rule="evenodd" d="M 103 15 L 142 15 L 142 131 L 112 131 L 112 108 L 64 108 L 48 131 L 15 131 Z M 115 39 L 113 83 L 83 83 Z"/></svg>
+      <div><h1>AES PTO Log</h1>
+        <div class="sub">Astronics Advanced Electronic Systems &middot; Paid Time Off Ledger</div></div>
+    </div>
+    <div class="savestat" id="saveStat"></div>
+  </header>
+  <nav class="tabbar" id="tabbar"></nav>
+  <div id="pages"></div>
+</div>
+<div id="modal"><div class="box"><div class="mh" id="mH"></div><div class="mm" id="mM"></div><div class="mb"><button class="cbtn" id="mNo">Cancel</button><button class="cbtn" id="mAlt" hidden></button><button class="cbtn cbtn-print" id="mYes">Continue</button></div></div></div>
+<div id="tokModal"><div class="box"><div class="mh">Connect to GitHub</div><ol><li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com → Fine-grained token</a></li><li>Repository access: <b>Only select repositories</b> → <b>aes-pto-log</b></li><li>Permissions → Repository → <b>Contents: Read and write</b></li><li>Generate token, copy it, and paste it here</li></ol><input id="tokIn" type="password" placeholder="github_pat_…" autocomplete="off"><div class="tn">Kept only in this browser — it is never written into the page file or the repo.</div><div class="mb"><button class="cbtn" id="tokForget">Forget token</button><span class="sp"></span><button class="cbtn" id="tokNo">Cancel</button><button class="cbtn cbtn-save" id="tokYes">Save token</button></div></div></div>
+<input type="file" id="importFile" accept=".json,application/json" hidden>
+<script>
+const PTO_BAKED = {"version":2,"years":{"2026":{"start":308,"roStart":68},"2027":{"accrual":240,"startOv":null,"roOv":null}},"trips":[{"id":"t01","year":2026,"c":0,"range":"FEB 16 - FEB 18","name":"Anniversary Weekend","days":[{"date":"2026-02-16","hours":null,"status":"Holiday"},{"date":"2026-02-17","hours":8,"status":"Taken"},{"date":"2026-02-18","hours":8,"status":"Taken"}]},{"id":"t02","year":2026,"c":1,"range":"MAY 16 - MAY 19","name":"Vinh's Graduation","days":[{"date":"2026-05-16","hours":null,"status":"Taken"},{"date":"2026-05-17","hours":null,"status":"Taken"},{"date":"2026-05-18","hours":9,"status":"Taken"},{"date":"2026-05-19","hours":9,"status":"Taken"}]},{"id":"t03","year":2026,"c":2,"range":"JUN 01 - JUN 08","name":"Cousins Trip","days":[{"date":"2026-06-01","hours":9,"status":"Taken"},{"date":"2026-06-02","hours":9,"status":"Taken"},{"date":"2026-06-03","hours":9,"status":"Taken"},{"date":"2026-06-04","hours":9,"status":"Taken"},{"date":"2026-06-05","hours":4,"status":"Taken"},{"date":"2026-06-06","hours":null,"status":"Weekend"},{"date":"2026-06-07","hours":null,"status":"Weekend"},{"date":"2026-06-08","hours":9,"status":"Taken"}]},{"id":"t04","year":2026,"c":3,"range":"JUN 09 - JUN 12","name":"Jury Duty","days":[{"date":"2026-06-09","hours":null,"status":"Taken"},{"date":"2026-06-10","hours":null,"status":"Cancelled"},{"date":"2026-06-11","hours":null,"status":"Cancelled"},{"date":"2026-06-12","hours":null,"status":"Cancelled"}]},{"id":"t05","year":2026,"c":4,"range":"JUL 03 - JUL 06","name":"Alaska Trip","days":[{"date":"2026-07-03","hours":null,"status":"Holiday"},{"date":"2026-07-04","hours":null,"status":"Taken"},{"date":"2026-07-05","hours":null,"status":"Taken"},{"date":"2026-07-06","hours":9,"status":"Taken"}]},{"id":"t06","year":2026,"c":5,"range":"JUL 17 - JUL 20","name":"Dominique's Wedding","days":[{"date":"2026-07-17","hours":4,"status":"Taken"},{"date":"2026-07-18","hours":null,"status":"Weekend"},{"date":"2026-07-19","hours":null,"status":"Weekend"},{"date":"2026-07-20","hours":9,"status":"Taken"}]},{"id":"t07","year":2026,"c":6,"range":"OCT 23 - OCT 26","name":"Vy's and Erika's Wedding","days":[{"date":"2026-10-23","hours":4,"status":"Approved"},{"date":"2026-10-24","hours":null,"status":"Weekend"},{"date":"2026-10-25","hours":null,"status":"Weekend"},{"date":"2026-10-26","hours":9,"status":"Approved"}]},{"id":"t08","year":2026,"c":7,"range":"NOV 23 - NOV 27","name":"Thanksgiving Holiday","days":[{"date":"2026-11-23","hours":8,"status":"Approved"},{"date":"2026-11-24","hours":8,"status":"Approved"},{"date":"2026-11-25","hours":8,"status":"Approved"},{"date":"2026-11-26","hours":null,"status":"Holiday"},{"date":"2026-11-27","hours":null,"status":"Holiday"}]},{"id":"t09","year":2026,"c":8,"range":"DEC 18 - JAN 04","name":"Vietnam Trip","days":[{"date":"2026-12-18","hours":4,"status":"Approved"},{"date":"2026-12-19","hours":null,"status":"Weekend"},{"date":"2026-12-20","hours":null,"status":"Weekend"},{"date":"2026-12-21","hours":8,"status":"Approved"},{"date":"2026-12-22","hours":8,"status":"Approved"},{"date":"2026-12-23","hours":8,"status":"Approved"},{"date":"2026-12-24","hours":8,"status":"Approved"},{"date":"2026-12-25","hours":null,"status":"Holiday"},{"date":"2026-12-26","hours":null,"status":"Weekend"},{"date":"2026-12-27","hours":null,"status":"Weekend"},{"date":"2026-12-28","hours":null,"status":"Holiday"},{"date":"2026-12-29","hours":null,"status":"Holiday"},{"date":"2026-12-30","hours":null,"status":"Holiday"},{"date":"2026-12-31","hours":null,"status":"Holiday"},{"date":"2027-01-01","hours":null,"status":"Holiday"},{"date":"2027-01-02","hours":null,"status":"Weekend"},{"date":"2027-01-03","hours":null,"status":"Weekend"},{"date":"2027-01-04","hours":9,"status":"Approved"}]},{"id":"t10","year":2026,"c":9,"pin":"last","range":"","name":"PTO Burndown","days":[{"date":"2026-08-21","hours":4,"status":"Approved"},{"date":"2026-08-28","hours":4,"status":"Approved"},{"date":"2026-09-11","hours":4,"status":"Approved"},{"date":"2026-09-18","hours":4,"status":"Approved"},{"date":"2026-09-25","hours":4,"status":"Approved"},{"date":"2026-10-02","hours":4,"status":"Approved"},{"date":"2026-10-09","hours":4,"status":"Approved"},{"date":"2026-10-16","hours":4,"status":"Approved"},{"date":"2026-10-30","hours":4,"status":"Approved"},{"date":"2026-11-06","hours":4,"status":"Approved"},{"date":"2026-11-13","hours":4,"status":"Approved"},{"date":"2026-11-20","hours":4,"status":"Approved"},{"date":"2026-12-04","hours":4,"status":"Approved"}]}]};
+</script>
+<script>
+(function(){
+'use strict';
+var STORE='aesPtoLog.v1', TABKEY='aesPtoLog.tab';
+var YEARS=[2026,2027], BASE_YEAR=2026, ROLL=80;
+var STATUSES=['Taken','Approved','Requested','Cancelled','Holiday','Weekend','Working','Late Start','Bereavement'];
+var SCOL={'Taken':'#42be65','Approved':'#4589ff','Requested':'#f1c21b','Cancelled':'#8d8d8d','Holiday':'#be95ff','Weekend':'#6f6f6f','Working':'#82cfff','Late Start':'#ff832b','Bereavement':'#ee5396'};
+var TCOL=['#4589ff','#be95ff','#3ddbd9','#f1c21b','#ff832b','#ee5396','#42be65','#82cfff','#a56eff','#08bdba'];
+var MON=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmt(n){if(n==null||n==='')return '';n=Math.round(n*100)/100;return String(n);}
+function numCls(n){return n<0?' neg':'';}
+function longDate(iso){var p=iso.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]);
+  return d.toLocaleDateString('en-US',{weekday:'long'})+', '+d.toLocaleDateString('en-US',{month:'long'})+' '+p[2]+', '+p[0];}
+function addDays(iso,n){var p=iso.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]+n);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function yr(iso){return +iso.slice(0,4);}
+
+/* ── state + persistence (Q27: newer wins) ── */
+var GH={owner:'hellohanh',repo:'aes-pto-log',path:'index.html',branch:'main'}, TOKKEY='aesPtoLog.ghToken';
+var S, savedAt=null, storeOk=true, base=null, dirty=false, ghBusy=false, ghNote='';
+function valid(o){return o&&typeof o==='object'&&o.years&&Array.isArray(o.trips)&&o.trips.every(function(t){return t&&Array.isArray(t.days);});}
+function migrate(d){
+  if(!(d.version>=2)){
+    d.trips.forEach(function(t,i){if(t.c==null)t.c=i;if(t.name==='PTO Burndown'&&!d.trips.some(function(x){return x.pin;}))t.pin='last';});
+    d.version=2;
+  }
+  return d;
+}
+function bakedAt(){return PTO_BAKED.ghSavedAt||null;}
+function load(){
+  var b=bakedAt();
+  try{var raw=localStorage.getItem(STORE);if(raw){var o=JSON.parse(raw);
+    if(valid(o.data)){var lb=o.base||null;
+      if(lb===b||(o.savedAt&&(!b||o.savedAt>b))){S=migrate(o.data);savedAt=o.savedAt||null;base=lb;dirty=o.dirty!==false;return;}
+    }}}catch(e){storeOk=false;}
+  S=clone(PTO_BAKED);base=b;dirty=false;savedAt=null;
+}
+function persist(){try{localStorage.setItem(STORE,JSON.stringify({data:S,savedAt:savedAt,base:base,dirty:dirty}));storeOk=true;}catch(e){storeOk=false;}}
+function save(){savedAt=new Date().toISOString();dirty=true;ghNote='';persist();stat();}
+function when(iso){return new Date(iso).toLocaleString('en-US',{month:'short',day:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit'});}
+function stat(){
+  var el=document.getElementById('saveStat'), line;
+  if(ghBusy)line='Saving to GitHub…';
+  else if(dirty)line='<b class="dw">Unsaved changes</b> · kept in this browser';
+  else if(base)line='<b>Saved to GitHub</b> · '+when(base)+(ghNote?'<br>'+ghNote:'');
+  else line='Workbook data · not yet saved to GitHub';
+  if(!storeOk)line+='<br><b style="color:var(--warn)">Browser storage blocked</b> — save to GitHub or Export';
+  el.className='savestat';
+  el.innerHTML='<button class="cbtn cbtn-save ghbtn'+(dirty?' dirty':'')+'" id="ghSave"'+(ghBusy?' disabled':'')+'>Save to GitHub</button>'+
+    '<div class="gl">'+line+'</div><button class="linkbtn" id="ghTok">GitHub token</button>';
+}
+
+/* ── Save to GitHub (Q25–Q27) ── */
+function getTok(){try{return localStorage.getItem(TOKKEY)||'';}catch(e){return '';}}
+function setTok(t){try{if(t)localStorage.setItem(TOKKEY,t);else localStorage.removeItem(TOKKEY);}catch(e){}}
+var tokCb=null;
+function tokenPrompt(cb){tokCb=cb||null;var i=document.getElementById('tokIn');i.value=getTok();document.getElementById('tokModal').classList.add('show');i.focus();}
+function tokClose(){document.getElementById('tokModal').classList.remove('show');tokCb=null;}
+document.getElementById('tokNo').onclick=tokClose;
+document.getElementById('tokForget').onclick=function(){setTok('');document.getElementById('tokIn').value='';tokClose();};
+document.getElementById('tokYes').onclick=function(){var v=document.getElementById('tokIn').value.trim();if(!v)return;setTok(v);var c=tokCb;tokClose();if(c)c();};
+document.getElementById('tokModal').addEventListener('click',function(e){if(e.target.id==='tokModal')tokClose();});
+function b64enc(str){var b=new TextEncoder().encode(str),r='';for(var i=0;i<b.length;i+=0x8000)r+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(r);}
+function b64dec(str){var bin=atob(str.replace(/\s/g,'')),u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new TextDecoder().decode(u);}
+var MK_A='const PTO_BAKED = ', MK_B=';\n<'+'/script>';
+function ghSave(force){
+  var tok=getTok();if(!tok)return tokenPrompt(function(){ghSave(force);});
+  var url='https://api.github.com/repos/'+GH.owner+'/'+GH.repo+'/contents/'+GH.path;
+  var hd={'Authorization':'Bearer '+tok,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+  ghBusy=true;stat();
+  function fail(title,msg){ghBusy=false;stat();ask(title,msg,'OK',null);}
+  fetch(url+'?ref='+GH.branch+'&t='+Date.now(),{headers:hd,cache:'no-store'}).then(function(r){
+    if(r.status===401||r.status===403){setTok('');throw {tok:1};}
+    if(!r.ok)throw {msg:'GitHub answered '+r.status+' when reading '+GH.repo+'/'+GH.path+'.'};
+    return r.json();
+  }).then(function(j){
+    var src=b64dec(j.content), i=src.indexOf(MK_A), k=i<0?-1:src.indexOf(MK_B,i);
+    if(i<0||k<0)throw {msg:'Could not find the data block in '+GH.path+' on GitHub.'};
+    var remote=JSON.parse(src.slice(i+MK_A.length,k)), rAt=remote.ghSavedAt||null;
+    if(!force&&rAt!==base){
+      ghBusy=false;stat();
+      ask('Newer version on GitHub','The copy on GitHub was saved '+(rAt?when(rAt):'from another source')+', after the version this browser started from. Overwrite it with this browser\'s data, or load the GitHub version instead (this browser\'s unsaved edits will be replaced).','Overwrite GitHub',function(){ghSave(true);},'Load GitHub version',function(){S=migrate(remote);base=rAt;dirty=false;savedAt=rAt;persist();renderAll();});
+      throw {quiet:1};
+    }
+    var now=new Date().toISOString(), data=clone(S);data.ghSavedAt=now;
+    var out=src.slice(0,i+MK_A.length)+JSON.stringify(data).replace(/<\//g,'<\\/')+src.slice(k);
+    return fetch(url,{method:'PUT',headers:hd,body:JSON.stringify({message:'PTO Log saved '+now,content:b64enc(out),sha:j.sha,branch:GH.branch})}).then(function(p){
+      if(p.status===401||p.status===403){setTok('');throw {tok:1};}
+      if(p.status===409||p.status===422)throw {msg:'GitHub changed while saving. Click Save to GitHub again.'};
+      if(!p.ok)throw {msg:'GitHub answered '+p.status+' when saving.'};
+      S.ghSavedAt=now;base=now;dirty=false;savedAt=now;ghNote='Live on the site in about a minute';persist();ghBusy=false;stat();
+    });
+  }).catch(function(e){
+    if(e&&e.quiet)return;
+    if(e&&e.tok)return fail('GitHub token not accepted','The token was rejected or lacks access to '+GH.repo+'. Click Save to GitHub again to enter a new one (Contents: Read and write on '+GH.repo+').');
+    fail('Could not save to GitHub',(e&&e.msg)||'Network error — check your connection and try again. Your changes are still kept in this browser.');
+  });
+}
+document.getElementById('saveStat').addEventListener('click',function(e){
+  if(e.target.id==='ghSave')ghSave(false);
+  else if(e.target.id==='ghTok')tokenPrompt(null);
+});
+
+/* ── calculation engine (mirrors the workbook) ── */
+function ysettings(y){if(!S.years[y])S.years[y]={accrual:240,startOv:null,roOv:null};return S.years[y];}
+function tripsFor(y){
+  return S.trips.map(function(t,i){return {t:t,i:i,days:t.days.map(function(d,j){return {d:d,j:j};}).filter(function(x){return yr(x.d.date)===y;})};})
+    .filter(function(x){return x.days.length||(!x.t.days.length&&x.t.year===y);});
+}
+var memo={};
+function computeYear(y){
+  if(memo[y])return memo[y];
+  var s=ysettings(y), r={y:y};
+  if(y===BASE_YEAR){r.start=+s.start||0;r.roStart=+s.roStart||0;}
+  else{
+    var p=computeYear(y-1);r.carry=p.ending;r.accrual=+s.accrual||0;
+    r.startCalc=r.accrual+r.carry;r.roCalc=Math.min(ROLL,r.carry);
+    r.start=(s.startOv==null||s.startOv==='')?r.startCalc:+s.startOv;
+    r.roStart=(s.roOv==null||s.roOv==='')?r.roCalc:+s.roOv;
+  }
+  var bal=r.start, ro=r.roStart, min=bal, used=0;
+  r.groups=tripsFor(y).map(function(g){
+    g.before={bal:bal,ro:ro};
+    g.rows=g.days.slice().sort(function(a,b){return a.d.date<b.d.date?-1:a.d.date>b.d.date?1:a.j-b.j;}).map(function(x){
+      var h=+x.d.hours||0;bal-=h;ro-=h;used+=h;if(bal<min)min=bal;
+      return {d:x.d,j:x.j,bal:bal,ro:ro};});
+    return g;});
+  r.ending=min;r.used=used;r.lastBal=bal;r.lastRo=ro;
+  memo[y]=r;return r;
+}
+function tripTotal(t){return t.days.reduce(function(a,d){return a+(+d.hours||0);},0);}
+
+/* ── render ── */
+var active;
+function buildShell(){
+  var tb=document.getElementById('tabbar'), pg=document.getElementById('pages');
+  tb.innerHTML=YEARS.slice().reverse().map(function(y){return '<button class="tab" data-tab="'+y+'">'+y+'</button>';}).join('');
+  pg.innerHTML=YEARS.map(function(y){return '<section class="page" id="page-'+y+'"></section>';}).join('');
+  tb.addEventListener('click',function(e){var b=e.target.closest('.tab');if(b)show(+b.dataset.tab);});
+  var t=null;try{t=+localStorage.getItem(TABKEY);}catch(e){}
+  show(YEARS.indexOf(t)>-1?t:YEARS[YEARS.length-1]);
+}
+function show(y){
+  active=y;
+  document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('on',+b.dataset.tab===y);});
+  document.querySelectorAll('.page').forEach(function(p){p.classList.toggle('on',p.id==='page-'+y);});
+  try{localStorage.setItem(TABKEY,y);}catch(e){}
+  renderAll();
+}
+function renderAll(){memo={};YEARS.forEach(render);stat();}
+
+function setupHtml(y,r){
+  var s=ysettings(y);
+  if(y===BASE_YEAR){
+    return '<div class="setup-grid">'+
+      fld('Starting Balance','start',s.start,'Entered manually')+
+      fld('Rollover Start','roStart',s.roStart,'Entered manually')+'</div>';
+  }
+  var sOv=!(s.startOv==null||s.startOv===''), rOv=!(s.roOv==null||s.roOv==='');
+  return '<div class="setup-grid">'+
+    fld('Accrual','accrual',s.accrual,'Hours added this year')+
+    '<div class="field"><label>Carry-in ('+(y-1)+' ending)</label><input readonly value="'+fmt(r.carry)+'" class="'+numCls(r.carry)+'"><div class="hint">From the '+(y-1)+' tab</div></div>'+
+    '<div class="field"><label>Starting Balance</label><input type="number" step="any" data-set="startOv" value="'+fmt(r.start)+'" class="'+(sOv?'ov':'')+numCls(r.start)+'"><div class="hint">'+(sOv?'Override · calc '+fmt(r.startCalc)+' · <button data-reset="startOv">reset</button>':'Accrual + carry-in')+'</div></div>'+
+    '<div class="field"><label>Rollover Start</label><input type="number" step="any" data-set="roOv" value="'+fmt(r.roStart)+'" class="'+(rOv?'ov':'')+numCls(r.roStart)+'"><div class="hint">'+(rOv?'Override · calc '+fmt(r.roCalc)+' · <button data-reset="roOv">reset</button>':'Carry-in, max '+ROLL)+'</div></div>'+
+    '</div>';
+}
+function fld(lbl,key,val,hint){return '<div class="field"><label>'+lbl+'</label><input type="number" step="any" data-set="'+key+'" value="'+fmt(val)+'"><div class="hint">'+hint+'</div></div>';}
+function tile(lbl,v,cls){return '<div class="tile '+(cls||'')+'"><div class="tl">'+lbl+'</div><div class="tv'+numCls(v)+'">'+fmt(v)+'<small>hrs</small></div></div>';}
+
+function render(y){
+  var r=computeYear(y), sec=document.getElementById('page-'+y);
+  var h='<div class="yr-top"><div class="calc setup"><div class="calc-h">'+y+' Setup</div><div class="calc-sub">'+(y===BASE_YEAR?'Starting values for the first year.':'Calculated from '+(y-1)+'; edit to override.')+'</div>'+setupHtml(y,r)+'</div>'+
+    '<div class="tiles">'+tile('Starting Balance',r.start)+tile('PTO Hours Used',r.used)+tile('Ending Balance',r.ending,'end')+tile(ROLL+' Hours Roll Over',r.lastBal-ROLL)+tile('Rollover Remaining',r.lastRo)+'</div></div>';
+  h+='<div class="ledger-bar"><button class="addtrip" data-act="addtrip"'+(draft?' disabled':'')+'>+ Add Trip</button><span class="sp"></span>'+
+     '<button class="cbtn" data-act="export">Export JSON</button><button class="cbtn" data-act="import">Import JSON</button><button class="cbtn" data-act="reset">Reset to Workbook</button></div>';
+  if(draft&&draft.y===y)h+=panelHtml();
+  h+='<div class="ledger-scroll"><table class="ledger"><thead><tr><th class="c-rng">Dates</th><th class="l">Trip / Day</th><th class="c-hrs">Hours</th><th class="c-st">Status</th><th class="c-bal">Running Balance</th><th class="c-bal">'+ROLL+' Hours<br>Roll Over</th><th class="c-bal">Rollover Remaining</th><th class="c-act"></th></tr></thead><tbody>';
+  h+='<tr class="start"><td></td><td class="l">Starting Balance</td><td></td><td>Starting</td><td class="n'+numCls(r.start)+'">'+fmt(r.start)+'</td><td class="n'+numCls(r.start-ROLL)+'">'+fmt(r.start-ROLL)+'</td><td class="n'+numCls(r.roStart)+'">'+fmt(r.roStart)+'</td><td></td></tr>';
+  r.groups.forEach(function(g){
+    var t=g.t, tc=TCOL[(t.c==null?g.i:t.c)%TCOL.length], ys=t.days.map(function(d){return yr(d.date);});
+    var mn=Math.min.apply(null,ys), mx=Math.max.apply(null,ys), badge='';
+    if(t.days.length&&mn<y)badge+='<span class="span-b">Continued from '+mn+'</span>';
+    if(t.days.length&&mx>y)badge+='<span class="span-b">Continues in '+mx+'</span>';
+    h+='<tr class="trip'+(t.id===flashId?' flash':'')+'" style="--tc:'+tc+'" data-t="'+g.i+'" data-id="'+esc(t.id)+'"><td><input class="ti rng" data-f="range" value="'+esc(t.range)+'" placeholder="MMM DD - MMM DD"></td>'+
+      '<td class="l"><div class="tname"><input class="ti" data-f="name" size="'+Math.max((t.name||'').length+1,10)+'" value="'+esc(t.name)+'" placeholder="Trip name"><span class="thrs">('+fmt(tripTotal(t))+' hours)</span>'+badge+'<button class="blurb-copy trip-copy" data-act="copytrip" title="Copy this trip as a table for an email">Copy</button></div></td>'+
+      '<td></td><td></td><td class="n'+numCls(g.before.bal)+'">'+fmt(g.before.bal)+'</td><td class="n'+numCls(g.before.bal-ROLL)+'">'+fmt(g.before.bal-ROLL)+'</td><td class="n'+numCls(g.before.ro)+'">'+fmt(g.before.ro)+'</td>'+
+      '<td><div class="acts"><button class="ib" data-act="addday">+ Day</button><button class="ib del" data-act="deltrip" title="Delete trip">✕</button></div></td></tr>';
+    g.rows.forEach(function(x){
+      var st=x.d.status||'';
+      h+='<tr class="day'+(st==='Cancelled'?' cx':'')+'" style="--tc:'+tc+'" data-t="'+g.i+'" data-d="'+x.j+'"><td></td>'+
+        '<td class="l dt"><span>'+esc(longDate(x.d.date))+'</span>'+nfWarn(t.name,x.d.date)+'<input type="date" data-f="date" value="'+x.d.date+'"></td>'+
+        '<td><input class="ti hrs" type="number" step="any" data-f="hours" value="'+fmt(x.d.hours)+'"></td>'+
+        '<td><select class="st'+(st?'':' empty')+'" data-f="status" style="--sc:'+(SCOL[st]||'')+'"><option value="">—</option>'+
+          STATUSES.concat(st&&STATUSES.indexOf(st)<0?[st]:[]).map(function(o){return '<option'+(o===st?' selected':'')+'>'+esc(o)+'</option>';}).join('')+'</select></td>'+
+        '<td class="n'+numCls(x.bal)+'">'+fmt(x.bal)+'</td><td class="n'+numCls(x.bal-ROLL)+'">'+fmt(x.bal-ROLL)+'</td><td class="n'+numCls(x.ro)+'">'+fmt(x.ro)+'</td>'+
+        '<td><div class="acts"><button class="ib del" data-act="delday" title="Delete day">✕</button></div></td></tr>';
+    });
+  });
+  if(!r.groups.length)h+='<tr><td colspan="8" class="empty-yr">No trips in '+y+' yet. Use “+ Add Trip” to start.</td></tr>';
+  h+='</tbody></table></div>';
+  sec.innerHTML=h;
+}
+
+/* ── Add Trip panel (Q15–Q18) ── */
+var draft=null, flashId=null;
+function isWknd(iso){if(!iso)return false;var p=iso.split('-'),w=new Date(+p[0],+p[1]-1,+p[2]).getDay();return w===0||w===6;}
+function mmmdd(iso){var p=iso.split('-');return MON[+p[1]-1]+' '+p[2];}
+function autoRange(days){var ds=days.map(function(d){return d.date;}).filter(Boolean).sort();if(!ds.length)return '';
+  return ds.length===1||ds[0]===ds[ds.length-1]?mmmdd(ds[0]):mmmdd(ds[0])+' - '+mmmdd(ds[ds.length-1]);}
+function draftTotal(){return draft.days.reduce(function(a,d){return a+(+d.hours||0);},0);}
+function stSelect(st,attr){return '<select class="st'+(st?'':' empty')+'" '+attr+' style="--sc:'+(SCOL[st]||'')+'"><option value="">—</option>'+
+  STATUSES.map(function(o){return '<option'+(o===st?' selected':'')+'>'+esc(o)+'</option>';}).join('')+'</select>';}
+function panelHtml(){
+  var d=draft, h='<div class="calc newtrip" id="ntPanel"><div class="nt-head"><div><div class="calc-h">New Trip</div><div class="calc-sub">Enter the trip and its days, then Save. It will be placed in date order.</div></div></div>'+
+    '<table class="ledger"><thead><tr><th class="c-rng">Dates</th><th class="l">Trip / Day</th><th class="c-hrs">Hours</th><th class="c-st">Status</th><th class="c-act"></th></tr></thead><tbody>'+
+    '<tr class="trip"><td><input class="ti rng" data-p="range" value="'+esc(d.range)+'" placeholder="Auto from days"></td>'+
+    '<td class="l"><div class="tname"><input class="ti'+(d.errName?' bad':'')+'" data-p="name" value="'+esc(d.name)+'" placeholder="Trip name (required)"><span class="thrs" id="ntTotal">('+fmt(draftTotal())+' hours)</span></div></td><td></td><td></td><td></td></tr>';
+  d.days.forEach(function(x,k){
+    h+='<tr class="day" data-k="'+k+'"><td></td><td class="l"><input class="ti date'+(d.errDate&&!x.date?' bad':'')+'" type="date" data-p="date" value="'+esc(x.date)+'" min="'+YEARS[0]+'-01-01" max="'+YEARS[YEARS.length-1]+'-12-31">'+(x.date?' <span style="color:var(--ink-soft);font-size:12px">'+esc(longDate(x.date).split(',')[0])+'</span>':'')+nfWarn(d.name,x.date)+'</td>'+
+      '<td><input class="ti hrs" type="number" step="any" data-p="hours" value="'+fmt(x.hours)+'"></td>'+
+      '<td>'+stSelect(x.status||'','data-p="status"')+'</td>'+
+      '<td><div class="acts"><button class="ib del" data-pact="pdel" title="Remove day">✕</button></div></td></tr>';
+  });
+  if(!d.days.length)h+='<tr><td colspan="5" class="empty-yr">No days yet. Use “+ Day”.</td></tr>';
+  h+='</tbody></table><div class="nt-actions"><button class="ib" data-pact="padd">+ Day</button><span class="sp"></span><span class="nt-err">'+esc(d.err||'')+'</span>'+
+    '<button class="cbtn" data-pact="pcancel">Cancel</button><button class="cbtn cbtn-save" data-pact="psave">Save Trip</button></div></div>';
+  return h;
+}
+function firstDate(t){var ds=t.days.map(function(d){return d.date;}).sort();return ds[0];}
+function saveDraft(){
+  var d=draft;d.err='';d.errName=!d.name.trim();d.errDate=d.days.some(function(x){return !x.date;});
+  if(d.errName)d.err='A trip name is required.';
+  else if(!d.days.length)d.err='Add at least one day.';
+  else if(d.errDate)d.err='Pick a date for every day (or remove it).';
+  if(d.err){renderAll();return;}
+  var days=d.days.map(function(x){return {date:x.date,hours:x.hours,status:x.status||''};}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
+  var c=S.trips.reduce(function(m,t,i){return Math.max(m,t.c==null?i:t.c);},-1)+1;
+  var t={id:'t'+Date.now(),year:yr(days[0].date),c:c,range:(d.range.trim()||autoRange(days)).toUpperCase(),name:d.name.trim(),days:days};
+  if(isBurn(t.name))t.pin='last';
+  var fd=days[0].date, at=-1;
+  if(!t.pin)for(var i=0;i<S.trips.length;i++){var o=S.trips[i];if(o.pin==='last'){if(at<0)at=i;break;}var f=firstDate(o);if(f&&f>fd){at=i;break;}}
+  if(at<0)at=S.trips.length;
+  S.trips.splice(at,0,t);draft=null;flashId=t.id;save();
+  if(t.year!==active)show(t.year);else renderAll();
+  var row=document.querySelector('#page-'+t.year+' tr[data-id="'+t.id+'"]');if(row)row.scrollIntoView({block:'center',behavior:'smooth'});
+  setTimeout(function(){flashId=null;},2500);
+}
+/* ── PTO Burndown: Fridays only (Q30–Q33) ── */
+var BURN_HRS=4;
+function isBurn(name){return /^\s*pto\s*burn\s*-?\s*down\s*$/i.test(name||'');}
+function isFri(iso){if(!iso)return false;var p=iso.split('-');return new Date(+p[0],+p[1]-1,+p[2]).getDay()===5;}
+function todayIso(){var t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
+function usedDates(skipTrip,extra){var u={};S.trips.forEach(function(t){if(t!==skipTrip)t.days.forEach(function(d){u[d.date]=1;});});(extra||[]).forEach(function(d){if(d)u[d]=1;});return u;}
+/* first free Friday strictly after `after` (Q32: skip Fridays already in another trip) */
+function nextFriday(after,used,maxYear){var d=addDays(after,1);while(!isFri(d))d=addDays(d,1);while(used[d])d=addDays(d,7);return yr(d)>maxYear?'':d;}
+function nfWarn(name,iso){return isBurn(name)&&iso&&!isFri(iso)?'<span class="nf-warn">⚠ Not a Friday</span>':'';}
+function newDay(){var ds=draft.days.map(function(x){return x.date;}).filter(Boolean).sort();
+  if(isBurn(draft.name)){var ti=todayIso(),from=ds.length?ds[ds.length-1]:(yr(ti)>=draft.y?addDays(ti,-1):(draft.y-1)+'-12-31');
+    return {date:nextFriday(from,usedDates(null,ds),YEARS[YEARS.length-1]),hours:BURN_HRS,status:''};}
+  var nd=ds.length?addDays(ds[ds.length-1],1):'';
+  if(nd&&yr(nd)>YEARS[YEARS.length-1])nd='';return {date:nd,hours:null,status:isWknd(nd)?'Weekend':''};}
+
+/* ── Copy trip as email table (Q20–Q22) ── */
+function emailDate(iso){var p=iso.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]);
+  return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});}
+function tripTable(t){
+  var days=t.days.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
+  var td='border:1px solid #000;padding:3px 8px;font-family:Tahoma,Arial,sans-serif;font-size:10pt;color:#000;';
+  var title=esc(t.name)+' ('+fmt(tripTotal(t))+' hours)';
+  var h='<table style="border-collapse:collapse;border:1px solid #000"><tr>'+
+    '<td style="'+td+'text-align:center;font-weight:bold;width:150px"><b>'+esc(t.range)+'</b></td>'+
+    '<td style="'+td+'font-weight:bold;width:320px"><b>'+title+'</b></td>'+
+    '<td style="'+td+'width:90px"></td></tr>';
+  var txt=t.range+'\t'+t.name+' ('+fmt(tripTotal(t))+' hours)\t\n';
+  days.forEach(function(d){
+    h+='<tr><td style="'+td+'"></td><td style="'+td+'">'+esc(emailDate(d.date))+'</td><td style="'+td+'text-align:center">'+fmt(d.hours)+'</td></tr>';
+    txt+='\t'+emailDate(d.date)+'\t'+fmt(d.hours)+'\n';
+  });
+  return {html:h+'</table>',text:txt};
+}
+function flashBtn(btn,ok){btn.textContent=ok?'Copied!':'Copy failed';btn.classList.toggle('done',ok);setTimeout(function(){btn.textContent='Copy';btn.classList.remove('done');},1400);}
+function copyRich(o,btn){
+  function dom(){
+    var box=document.createElement('div');box.style.cssText='position:fixed;left:-9999px;top:0;background:#fff';box.innerHTML=o.html;document.body.appendChild(box);
+    var r=document.createRange();r.selectNodeContents(box);var sel=getSelection();sel.removeAllRanges();sel.addRange(r);
+    var ok=false;try{ok=document.execCommand('copy');}catch(_){}sel.removeAllRanges();box.remove();flashBtn(btn,ok);
+  }
+  if(navigator.clipboard&&window.ClipboardItem){
+    navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([o.html],{type:'text/html'}),'text/plain':new Blob([o.text],{type:'text/plain'})})])
+      .then(function(){flashBtn(btn,true);},dom);
+  }else dom();
+}
+
+/* ── modal ── */
+var mCb=null;
+var mAltCb=null;
+function ask(title,msg,yes,cb,alt,altCb){
+  document.getElementById('mH').textContent=title;document.getElementById('mM').textContent=msg;
+  document.getElementById('mYes').textContent=yes;mCb=cb;
+  var ab=document.getElementById('mAlt');ab.hidden=!alt;ab.textContent=alt||'';mAltCb=altCb||null;
+  document.getElementById('modal').classList.add('show');
+}
+function closeM(){document.getElementById('modal').classList.remove('show');mCb=null;}
+document.getElementById('mNo').onclick=closeM;
+document.getElementById('mYes').onclick=function(){var c=mCb;closeM();if(c)c();};
+document.getElementById('mAlt').onclick=function(){var c=mAltCb;closeM();if(c)c();};
+document.getElementById('modal').addEventListener('click',function(e){if(e.target.id==='modal')closeM();});
+
+/* ── events ── */
+function commit(){save();renderAll();}
+var pages=document.getElementById('pages');
+pages.addEventListener('input',function(e){
+  var el=e.target,f=el.dataset.p;if(!f||!draft)return;
+  if(f==='name'){draft.name=el.value;if(el.value.trim()){el.classList.remove('bad');if(draft.errName){draft.errName=false;draft.err='';var er=document.querySelector('#ntPanel .nt-err');if(er)er.textContent='';}}}
+  else if(f==='range'){draft.range=el.value;draft.rangeAuto=!el.value.trim();}
+  else if(f==='hours'){var k=+el.closest('tr').dataset.k;draft.days[k].hours=el.value===''?null:+el.value;document.getElementById('ntTotal').textContent='('+fmt(draftTotal())+' hours)';}
+});
+pages.addEventListener('change',function(e){
+  var el=e.target,f=el.dataset.p;if(!f||!draft)return;
+  e.stopImmediatePropagation();
+  if(f==='range'){draft.range=el.value.toUpperCase();draft.rangeAuto=!el.value.trim();return renderAll();}
+  if(f==='name'){
+    var nb=isBurn(draft.name);if(nb===!!draft.wasBurn)return;   // only redraw when Burndown status flips (keeps the next click intact)
+    draft.wasBurn=nb;
+    if(nb&&draft.days.length===1&&!draft.days[0].date){draft.days[0]=newDay();if(draft.rangeAuto)draft.range=autoRange(draft.days);}
+    return renderAll();
+  }
+  if(f!=='date'&&f!=='status')return;
+  draft.err='';draft.errDate=false;
+  var x=draft.days[+el.closest('tr').dataset.k];
+  if(f==='status')x.status=el.value;
+  else{var was=isWknd(x.date);x.date=el.value;
+    if(isWknd(x.date)&&!x.status)x.status='Weekend';else if(was&&!isWknd(x.date)&&x.status==='Weekend')x.status='';}
+  if(draft.rangeAuto)draft.range=autoRange(draft.days);
+  renderAll();
+},true);
+pages.addEventListener('click',function(e){
+  var b=e.target.closest('[data-pact]');if(!b||!draft)return;
+  e.stopImmediatePropagation();var a=b.dataset.pact;
+  if(a!=='psave'){draft.err='';draft.errDate=false;}
+  if(a==='padd'){draft.days.push(newDay());if(draft.rangeAuto)draft.range=autoRange(draft.days);renderAll();var ds=document.querySelectorAll('#ntPanel input[data-p="date"]');ds[ds.length-1].focus();}
+  else if(a==='pdel'){draft.days.splice(+b.closest('tr').dataset.k,1);if(draft.rangeAuto)draft.range=autoRange(draft.days);renderAll();}
+  else if(a==='pcancel'){draft=null;renderAll();}
+  else if(a==='psave')saveDraft();
+},true);
+pages.addEventListener('change',function(e){
+  var el=e.target, tr=el.closest('tr');
+  if(el.dataset.set){
+    var s=ysettings(active), v=el.value===''?null:+el.value, k=el.dataset.set;
+    if(k==='startOv'||k==='roOv'){var r=computeYear(active), calc=k==='startOv'?r.startCalc:r.roCalc;s[k]=(v==null||v===calc)?null:v;}
+    else s[k]=v==null?0:v;
+    return commit();
+  }
+  if(!tr||!el.dataset.f)return;
+  var t=S.trips[+tr.dataset.t], f=el.dataset.f;
+  if(tr.classList.contains('trip')){t[f]=f==='range'?el.value.toUpperCase():el.value;return commit();}
+  var d=t.days[+tr.dataset.d];
+  if(f==='hours')d.hours=el.value===''?null:+el.value;
+  else if(f==='status')d.status=el.value;
+  else if(f==='date'){if(!el.value)return renderAll();d.date=el.value;}
+  commit();
+});
+pages.addEventListener('click',function(e){
+  var rs=e.target.closest('[data-reset]');
+  if(rs){ysettings(active)[rs.dataset.reset]=null;return commit();}
+  var dt=e.target.closest('td.dt');
+  if(dt&&!dt.classList.contains('edit')){
+    var inp=dt.querySelector('input');
+    try{inp.showPicker();}catch(_){dt.classList.add('edit');inp.focus();inp.addEventListener('blur',function(){dt.classList.remove('edit');},{once:true});}
+    return;
+  }
+  var b=e.target.closest('[data-act]');if(!b)return;
+  var act=b.dataset.act, tr=b.closest('tr');
+  if(act==='addtrip'){
+    draft={y:active,name:'',range:'',rangeAuto:true,days:[{date:'',hours:null,status:''}],err:''};renderAll();
+    var nm=document.querySelector('#ntPanel input[data-p="name"]');if(nm){nm.focus();document.getElementById('ntPanel').scrollIntoView({block:'nearest',behavior:'smooth'});}
+    return;
+  }
+  if(act==='addday'){
+    var t=S.trips[+tr.dataset.t], mine=t.days.filter(function(d){return yr(d.date)===active;}).map(function(d){return d.date;}).sort();
+    var nd;
+    if(isBurn(t.name)){
+      var from=mine.length?mine[mine.length-1]:(yr(todayIso())===active?addDays(todayIso(),-1):(active-1)+'-12-31');
+      nd=nextFriday(from,usedDates(t,t.days.map(function(d){return d.date;})),active);
+      if(!nd){ask('No free Fridays left','Every remaining Friday in '+active+' is already in a trip.','OK',null);return;}
+      t.days.push({date:nd,hours:BURN_HRS,status:''});return commit();
+    }
+    if(mine.length)nd=addDays(mine[mine.length-1],1);
+    else{var today=new Date(),ti=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');nd=yr(ti)===active?ti:active+'-01-01';}
+    if(yr(nd)!==active)nd=mine[mine.length-1];
+    t.days.push({date:nd,hours:null,status:''});return commit();
+  }
+  if(act==='copytrip'){copyRich(tripTable(S.trips[+tr.dataset.t]),b);return;}
+  if(act==='delday'){S.trips[+tr.dataset.t].days.splice(+tr.dataset.d,1);return commit();}
+  if(act==='deltrip'){
+    var tt=S.trips[+tr.dataset.t];
+    ask('Delete trip?','“'+(tt.name||'Untitled')+'” and all '+tt.days.length+' of its days (in every year) will be removed.','Delete',function(){S.trips.splice(S.trips.indexOf(tt),1);commit();});
+    return;
+  }
+  if(act==='export'){
+    var blob=new Blob([JSON.stringify(S,null,1)],{type:'application/json'}), a=document.createElement('a'), n=new Date();
+    a.href=URL.createObjectURL(blob);a.download='AES_PTO_Log_'+n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')+'.json';
+    document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);return;
+  }
+  if(act==='import'){document.getElementById('importFile').click();return;}
+  if(act==='reset'){ask('Reset to saved data?','All unsaved edits in this browser will be replaced with the data stored in this page file (the last Save to GitHub, or the original workbook data). Export first if you want a backup.','Reset',function(){S=clone(PTO_BAKED);base=bakedAt();dirty=false;savedAt=null;persist();renderAll();});return;}
+});
+document.getElementById('importFile').addEventListener('change',function(e){
+  var f=e.target.files[0];if(!f)return;var rd=new FileReader();
+  rd.onload=function(){try{var o=JSON.parse(rd.result);if(!valid(o))throw 0;
+    ask('Import '+f.name+'?','This replaces everything currently on the page with the contents of the file.','Import',function(){S=migrate(o);commit();});}
+    catch(_){ask('Not a PTO Log file','That file could not be read as an AES PTO Log export.','OK',null);}
+    e.target.value='';};
+  rd.readAsText(f);
+});
+
+load();buildShell();
+})();
+</script>
+</body></html>
