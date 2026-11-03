@@ -158,7 +158,6 @@ td.dt.edit span{display:none}
 .cal-g .d.out{visibility:hidden}
 .cal-g .d.p{background:color-mix(in srgb,var(--tc) 30%,#1c1c1c);color:#fff;font-weight:700;cursor:pointer}
 .cal-g .d.p:hover{outline:1px solid var(--tc)}
-.cal-g .d.p.hol{background:color-mix(in srgb,#be95ff 22%,#1c1c1c);color:#d4bbff}
 .cal-g .d.p.zero{background:color-mix(in srgb,var(--tc) 12%,#1c1c1c);color:var(--ink-soft);font-weight:600}
 .cal-g .d.today{box-shadow:inset 0 0 0 1.5px var(--cp-yellow);color:var(--cp-yellow);font-weight:800}
 .cal-leg{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:10.5px;color:var(--ink-soft)}
@@ -219,7 +218,9 @@ var STORE='aesPtoLog.v1', TABKEY='aesPtoLog.tab';
 var YEARS=[2026,2027], BASE_YEAR=2026, ROLL=80;
 var STATUSES=['Taken','Approved','Requested','Cancelled','Holiday','Weekend','Working','Late Start','Bereavement'];
 var SCOL={'Taken':'#42be65','Approved':'#4589ff','Requested':'#f1c21b','Cancelled':'#8d8d8d','Holiday':'#be95ff','Weekend':'#6f6f6f','Working':'#82cfff','Late Start':'#ff832b','Bereavement':'#ee5396'};
-var TCOL=['#4589ff','#be95ff','#3ddbd9','#f1c21b','#ff832b','#ee5396','#42be65','#82cfff','#a56eff','#08bdba'];
+var TCOL=['#4589ff','#be95ff','#3ddbd9','#f1c21b','#ff832b','#6fdc8c','#42be65','#82cfff','#a56eff','#08bdba'];  /* no reds/pinks: cherry red is reserved for PTO Burndown */
+var BURN_COL='#D2042D';
+function tripColor(t,i){return isBurn(t.name)?BURN_COL:TCOL[(t.c==null?i:t.c)%TCOL.length];}
 var MON=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
 function clone(o){return JSON.parse(JSON.stringify(o));}
@@ -393,7 +394,7 @@ function render(y){
   h+='<div class="ledger-scroll"><table class="ledger"><thead><tr><th class="c-rng">Dates</th><th class="l">Trip / Day</th><th class="c-hrs">Hours</th><th class="c-st">Status</th><th class="c-bal">Running Balance</th><th class="c-bal">'+ROLL+' Hours<br>Roll Over</th><th class="c-bal">Rollover Remaining</th><th class="c-act"></th></tr></thead><tbody>';
   h+='<tr class="start"><td></td><td class="l">Starting Balance</td><td></td><td>Starting</td><td class="n'+numCls(r.start)+'">'+fmt(r.start)+'</td><td class="n'+numCls(r.start-ROLL)+'">'+fmt(r.start-ROLL)+'</td><td class="n'+numCls(r.roStart)+'">'+fmt(r.roStart)+'</td><td></td></tr>';
   r.groups.forEach(function(g){
-    var t=g.t, tc=TCOL[(t.c==null?g.i:t.c)%TCOL.length], ys=t.days.map(function(d){return yr(d.date);});
+    var t=g.t, tc=tripColor(t,g.i), ys=t.days.map(function(d){return yr(d.date);});
     var mn=Math.min.apply(null,ys), mx=Math.max.apply(null,ys), badge='';
     if(t.days.length&&mn<y)badge+='<span class="span-b">Continued from '+mn+'</span>';
     if(t.days.length&&mx>y)badge+='<span class="span-b">Continues in '+mx+'</span>';
@@ -511,7 +512,7 @@ function copyRich(o,btn){
 var MONL=['January','February','March','April','May','June','July','August','September','October','November','December'];
 var calStart={};
 function calDefault(y){var t=new Date();return y===t.getFullYear()?{y:t.getMonth()===0?y-1:y,m:(t.getMonth()+11)%12}:{y:y,m:0};}
-function calInfo(){var o={};S.trips.forEach(function(t,i){t.days.forEach(function(d,j){if(d.status==='Weekend')return;o[d.date]={i:i,j:j,t:t.name,c:TCOL[(t.c==null?i:t.c)%TCOL.length],h:+d.hours||0,s:d.status||''};});});return o;}
+function calInfo(){var o={};S.trips.forEach(function(t,i){var c=tripColor(t,i);t.days.forEach(function(d,j){o[d.date]={i:i,j:j,t:t.name,c:c,h:+d.hours||0,s:d.status||''};});});return o;}
 function addMon(a,n){var m=a.m+n;return {y:a.y+Math.floor(m/12),m:((m%12)+12)%12};}
 function calMonth(y,m,info,ti){
   var h='<div class="cal-m"><div class="mn">'+MONL[m]+' '+y+'</div><div class="cal-g">'+'SMTWTFS'.split('').map(function(x){return '<div class="dw">'+x+'</div>';}).join('');
@@ -520,7 +521,7 @@ function calMonth(y,m,info,ti){
   for(var d=1;d<=n;d++){
     var k=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0'),w=new Date(y,m,d).getDay(),x=info[k];
     var c='d'+(w===0||w===6?' we':'')+(k===ti?' today':''),at='';
-    if(x){c+=' p'+(x.s==='Holiday'?' hol':'')+(x.h?'':' zero');at=' style="--tc:'+x.c+'" data-ct="'+x.i+'" data-cd="'+x.j+'" title="'+esc(x.t+' · '+fmt(x.h)+' hrs · '+(x.s||'—'))+'"';}
+    if(x){c+=' p'+(!x.h&&x.s!=='Holiday'&&x.s!=='Weekend'&&w!==0&&w!==6?' zero':'');at=' style="--tc:'+x.c+'" data-ct="'+x.i+'" data-cd="'+x.j+'" title="'+esc(x.t+' · '+fmt(x.h)+' hrs · '+(x.s||'—'))+'"';}
     h+='<div class="'+c+'"'+at+'>'+d+'</div>';
   }
   return h+'</div></div>';
@@ -530,7 +531,7 @@ function calHtml(y){
   return '<div class="cal-h"><button class="cal-nav" data-cal="-1" title="Previous month">‹</button>'+
     '<button class="cal-today" data-cal="0">Today</button><button class="cal-nav" data-cal="1" title="Next month">›</button></div>'+
     '<div class="cal-ms">'+ms.map(function(x){return calMonth(x.y,x.m,info,ti);}).join('')+'</div>'+
-    '<div class="cal-leg"><span><i style="background:color-mix(in srgb,#4589ff 30%,#1c1c1c)"></i>PTO day (trip color)</span><span><i style="background:color-mix(in srgb,#be95ff 22%,#1c1c1c)"></i>Holiday</span><span><i style="box-shadow:inset 0 0 0 1.5px #f1c21b"></i>Today</span></div>';
+    '<div class="cal-leg"><span><i style="background:color-mix(in srgb,#4589ff 30%,#1c1c1c)"></i>Trip day (trip color)</span><span><i style="background:color-mix(in srgb,#D2042D 30%,#1c1c1c)"></i>PTO Burndown</span><span><i style="box-shadow:inset 0 0 0 1.5px #f1c21b"></i>Today</span></div>';
 }
 function calGo(y,n){
   if(n===0){var t=new Date();calStart[y]={y:t.getMonth()===0?t.getFullYear()-1:t.getFullYear(),m:(t.getMonth()+11)%12};}  /* Today: last / this / next month */
