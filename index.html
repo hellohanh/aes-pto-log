@@ -227,9 +227,27 @@ var STORE='aesPtoLog.v1', TABKEY='aesPtoLog.tab';
 var YEARS=[2026,2027], BASE_YEAR=2026, ROLL=80;
 var STATUSES=['Taken','Approved','Requested','Cancelled','Holiday','Weekend','Working','Late Start','Bereavement'];
 var SCOL={'Taken':'#42be65','Approved':'#4589ff','Requested':'#f1c21b','Cancelled':'#8d8d8d','Holiday':'#be95ff','Weekend':'#6f6f6f','Working':'#82cfff','Late Start':'#ff832b','Bereavement':'#ee5396'};
-var TCOL=['#4589ff','#be95ff','#3ddbd9','#f1c21b','#ff832b','#6fdc8c','#42be65','#82cfff','#a56eff','#08bdba'];  /* no reds/pinks: cherry red is reserved for PTO Burndown */
-var BURN_COL='#D2042D';
-function tripColor(t,i){return isBurn(t.name)?BURN_COL:TCOL[(t.c==null?i:t.c)%TCOL.length];}
+/* Trip colors (Q45): six clearly different hues, no reds/pinks (cherry red is reserved for PTO Burndown).
+   Assigned in list order so a trip never shares a color with the trip before it in the same year;
+   a trip spanning two years keeps one color on both tabs. */
+var TCOL=['#4589ff','#ff832b','#3ddbd9','#f1c21b','#a56eff','#42be65'];
+var BURN_COL='#D2042D', colorMap=null, colorKey='';
+function tripYears(t){var ys={};t.days.forEach(function(d){ys[yr(d.date)]=1;});if(!t.days.length)ys[t.year]=1;return Object.keys(ys);}
+function buildColors(){
+  var map=[],lastBy={},pick=-1;
+  S.trips.forEach(function(t,i){
+    if(isBurn(t.name)){map[i]=BURN_COL;tripYears(t).forEach(function(y){lastBy[y]=BURN_COL;});return;}
+    var ys=tripYears(t),k,c;
+    for(k=1;k<=TCOL.length;k++){c=TCOL[(pick+k)%TCOL.length];if(ys.every(function(y){return lastBy[y]!==c;}))break;}
+    pick=TCOL.indexOf(c);map[i]=c;ys.forEach(function(y){lastBy[y]=c;});
+  });
+  return map;
+}
+function tripColor(t,i){
+  var key=S.trips.map(function(x){return x.name+'|'+tripYears(x).join(',');}).join(';');
+  if(key!==colorKey||!colorMap){colorMap=buildColors();colorKey=key;}
+  return colorMap[i];
+}
 var MON=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
 function clone(o){return JSON.parse(JSON.stringify(o));}
