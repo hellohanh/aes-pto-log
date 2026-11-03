@@ -138,6 +138,32 @@ td.dt.edit span{display:none}
 .blurb-copy:hover{background:#2A5BA6;border-color:#2A5BA6;color:#fff}
 .blurb-copy.done{background:#238636;border-color:#238636;color:#fff}
 .trip-copy{margin-left:auto;border-radius:12px;padding:4px 12px}
+.yr-top{align-items:start}
+.lcol{display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+.lcol .setup{align-self:stretch}
+.rcol{display:flex;flex-direction:column;gap:10px;min-width:0}
+.cal{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px 12px}
+.cal-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.cal-h .t{font:800 13px var(--hd);letter-spacing:.04em;flex:1;text-align:center;color:var(--ink-soft)}
+.cal-nav{background:transparent;border:1px solid var(--line-2);color:var(--ink);width:26px;height:26px;border-radius:6px;cursor:pointer;font:700 14px var(--ui);line-height:1;padding:0}
+.cal-nav:hover,.cal-today:hover{border-color:var(--accent);color:var(--ink)}
+.cal-today{background:transparent;border:1px solid var(--line-2);color:var(--ink-soft);border-radius:6px;font:700 10.5px var(--ui);padding:5px 9px;cursor:pointer}
+.cal-ms{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:700px){.cal-ms{grid-template-columns:1fr}}
+.cal-m .mn{font:800 12.5px var(--hd);letter-spacing:.06em;text-transform:uppercase;text-align:center;margin-bottom:4px}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-g .dw{font-size:9px;font-weight:800;color:var(--ink-soft);text-align:center;padding-bottom:2px}
+.cal-g .d{position:relative;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.cal-g .d.we{color:#6f6f6f}
+.cal-g .d.out{visibility:hidden}
+.cal-g .d.p{background:color-mix(in srgb,var(--tc) 30%,#1c1c1c);color:#fff;font-weight:700;cursor:pointer}
+.cal-g .d.p:hover{outline:1px solid var(--tc)}
+.cal-g .d.p.hol{background:color-mix(in srgb,#be95ff 22%,#1c1c1c);color:#d4bbff}
+.cal-g .d.p.zero{background:color-mix(in srgb,var(--tc) 12%,#1c1c1c);color:var(--ink-soft);font-weight:600}
+.cal-g .d.today{box-shadow:inset 0 0 0 1.5px var(--cp-yellow);color:var(--cp-yellow);font-weight:800}
+.cal-leg{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:10.5px;color:var(--ink-soft)}
+.cal-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.ledger-scroll{margin-top:16px}
 .empty-yr{padding:30px;text-align:center;color:var(--ink-soft);font-size:13px}
 .addtrip:disabled{opacity:.35;cursor:default;background:transparent}
 .cbtn-save{background:#4589ff;border-color:#4589ff;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
@@ -183,7 +209,6 @@ tr.flash td{animation:flash 2.4s ease-out}
 </div>
 <div id="modal"><div class="box"><div class="mh" id="mH"></div><div class="mm" id="mM"></div><div class="mb"><button class="cbtn" id="mNo">Cancel</button><button class="cbtn" id="mAlt" hidden></button><button class="cbtn cbtn-print" id="mYes">Continue</button></div></div></div>
 <div id="tokModal"><div class="box"><div class="mh">Connect to GitHub</div><ol><li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com → Fine-grained token</a></li><li>Repository access: <b>Only select repositories</b> → <b>aes-pto-log</b></li><li>Permissions → Repository → <b>Contents: Read and write</b></li><li>Generate token, copy it, and paste it here</li></ol><input id="tokIn" type="password" placeholder="github_pat_…" autocomplete="off"><div class="tn">Kept only in this browser — it is never written into the page file or the repo.</div><div class="mb"><button class="cbtn" id="tokForget">Forget token</button><span class="sp"></span><button class="cbtn" id="tokNo">Cancel</button><button class="cbtn cbtn-save" id="tokYes">Save token</button></div></div></div>
-<input type="file" id="importFile" accept=".json,application/json" hidden>
 <script>
 const PTO_BAKED = {"version":2,"years":{"2026":{"start":308,"roStart":68},"2027":{"accrual":240,"startOv":null,"roOv":null}},"trips":[{"id":"t01","year":2026,"c":0,"range":"FEB 16 - FEB 18","name":"Anniversary Weekend","days":[{"date":"2026-02-16","hours":null,"status":"Holiday"},{"date":"2026-02-17","hours":8,"status":"Taken"},{"date":"2026-02-18","hours":8,"status":"Taken"}]},{"id":"t02","year":2026,"c":1,"range":"MAY 16 - MAY 19","name":"Vinh's Graduation","days":[{"date":"2026-05-16","hours":null,"status":"Taken"},{"date":"2026-05-17","hours":null,"status":"Taken"},{"date":"2026-05-18","hours":9,"status":"Taken"},{"date":"2026-05-19","hours":9,"status":"Taken"}]},{"id":"t03","year":2026,"c":2,"range":"JUN 01 - JUN 08","name":"Cousins Trip","days":[{"date":"2026-06-01","hours":9,"status":"Taken"},{"date":"2026-06-02","hours":9,"status":"Taken"},{"date":"2026-06-03","hours":9,"status":"Taken"},{"date":"2026-06-04","hours":9,"status":"Taken"},{"date":"2026-06-05","hours":4,"status":"Taken"},{"date":"2026-06-06","hours":null,"status":"Weekend"},{"date":"2026-06-07","hours":null,"status":"Weekend"},{"date":"2026-06-08","hours":9,"status":"Taken"}]},{"id":"t04","year":2026,"c":3,"range":"JUN 09 - JUN 12","name":"Jury Duty","days":[{"date":"2026-06-09","hours":null,"status":"Taken"},{"date":"2026-06-10","hours":null,"status":"Cancelled"},{"date":"2026-06-11","hours":null,"status":"Cancelled"},{"date":"2026-06-12","hours":null,"status":"Cancelled"}]},{"id":"t05","year":2026,"c":4,"range":"JUL 03 - JUL 06","name":"Alaska Trip","days":[{"date":"2026-07-03","hours":null,"status":"Holiday"},{"date":"2026-07-04","hours":null,"status":"Taken"},{"date":"2026-07-05","hours":null,"status":"Taken"},{"date":"2026-07-06","hours":9,"status":"Taken"}]},{"id":"t06","year":2026,"c":5,"range":"JUL 17 - JUL 20","name":"Dominique's Wedding","days":[{"date":"2026-07-17","hours":4,"status":"Taken"},{"date":"2026-07-18","hours":null,"status":"Weekend"},{"date":"2026-07-19","hours":null,"status":"Weekend"},{"date":"2026-07-20","hours":9,"status":"Taken"}]},{"id":"t07","year":2026,"c":6,"range":"OCT 23 - OCT 26","name":"Vy's and Erika's Wedding","days":[{"date":"2026-10-23","hours":4,"status":"Taken"},{"date":"2026-10-24","hours":null,"status":"Weekend"},{"date":"2026-10-25","hours":null,"status":"Weekend"},{"date":"2026-10-26","hours":9,"status":"Taken"}]},{"id":"t08","year":2026,"c":7,"range":"NOV 23 - NOV 27","name":"Thanksgiving Holiday","days":[{"date":"2026-11-23","hours":8,"status":"Approved"},{"date":"2026-11-24","hours":8,"status":"Approved"},{"date":"2026-11-25","hours":8,"status":"Approved"},{"date":"2026-11-26","hours":null,"status":"Holiday"},{"date":"2026-11-27","hours":null,"status":"Holiday"}]},{"id":"t09","year":2026,"c":8,"range":"DEC 18 - JAN 04","name":"Vietnam Trip","days":[{"date":"2026-12-18","hours":4,"status":"Approved"},{"date":"2026-12-19","hours":null,"status":"Weekend"},{"date":"2026-12-20","hours":null,"status":"Weekend"},{"date":"2026-12-21","hours":8,"status":"Approved"},{"date":"2026-12-22","hours":8,"status":"Approved"},{"date":"2026-12-23","hours":8,"status":"Approved"},{"date":"2026-12-24","hours":8,"status":"Approved"},{"date":"2026-12-25","hours":null,"status":"Holiday"},{"date":"2026-12-26","hours":null,"status":"Weekend"},{"date":"2026-12-27","hours":null,"status":"Weekend"},{"date":"2026-12-28","hours":null,"status":"Holiday"},{"date":"2026-12-29","hours":null,"status":"Holiday"},{"date":"2026-12-30","hours":null,"status":"Holiday"},{"date":"2026-12-31","hours":null,"status":"Holiday"},{"date":"2027-01-01","hours":null,"status":"Holiday"},{"date":"2027-01-02","hours":null,"status":"Weekend"},{"date":"2027-01-03","hours":null,"status":"Weekend"},{"date":"2027-01-04","hours":9,"status":"Approved"}]},{"id":"t10","year":2026,"c":9,"pin":"last","range":"VARIOUS","name":"PTO Burndown","days":[{"date":"2026-08-21","hours":4,"status":"Taken"},{"date":"2026-08-28","hours":4,"status":"Taken"},{"date":"2026-09-11","hours":4,"status":"Taken"},{"date":"2026-09-18","hours":4,"status":"Taken"},{"date":"2026-09-25","hours":4,"status":"Taken"},{"date":"2026-10-02","hours":4,"status":"Taken"},{"date":"2026-10-09","hours":4,"status":"Taken"},{"date":"2026-10-16","hours":4,"status":"Taken"},{"date":"2026-10-30","hours":4,"status":"Taken"},{"date":"2026-11-06","hours":4,"status":"Approved"},{"date":"2026-11-13","hours":4,"status":"Approved"},{"date":"2026-11-20","hours":4,"status":"Approved"},{"date":"2026-12-04","hours":4,"status":"Approved"}]}],"ghSavedAt":"2026-11-03T14:49:36.681Z"};
 </script>
@@ -350,9 +375,9 @@ function setupHtml(y,r){
   }
   var sOv=!(s.startOv==null||s.startOv===''), rOv=!(s.roOv==null||s.roOv==='');
   return '<div class="setup-grid">'+
-    fld('Accrual','accrual',s.accrual,'Hours added this year')+
+    fld('Yearly Allowance','accrual',s.accrual,'Hours added this year')+
     '<div class="field"><label>Carry-in ('+(y-1)+' ending)</label><input readonly value="'+fmt(r.carry)+'" class="'+numCls(r.carry)+'"><div class="hint">From the '+(y-1)+' tab</div></div>'+
-    '<div class="field"><label>Starting Balance</label><input type="number" step="any" data-set="startOv" value="'+fmt(r.start)+'" class="'+(sOv?'ov':'')+numCls(r.start)+'"><div class="hint">'+(sOv?'Override · calc '+fmt(r.startCalc)+' · <button data-reset="startOv">reset</button>':'Accrual + carry-in')+'</div></div>'+
+    '<div class="field"><label>Starting Balance</label><input type="number" step="any" data-set="startOv" value="'+fmt(r.start)+'" class="'+(sOv?'ov':'')+numCls(r.start)+'"><div class="hint">'+(sOv?'Override · calc '+fmt(r.startCalc)+' · <button data-reset="startOv">reset</button>':'Yearly allowance + carry-in')+'</div></div>'+
     '<div class="field"><label>Rollover Start</label><input type="number" step="any" data-set="roOv" value="'+fmt(r.roStart)+'" class="'+(rOv?'ov':'')+numCls(r.roStart)+'"><div class="hint">'+(rOv?'Override · calc '+fmt(r.roCalc)+' · <button data-reset="roOv">reset</button>':'Carry-in, max '+ROLL)+'</div></div>'+
     '</div>';
 }
@@ -361,10 +386,9 @@ function tile(lbl,v,cls){return '<div class="tile '+(cls||'')+'"><div class="tl"
 
 function render(y){
   var r=computeYear(y), sec=document.getElementById('page-'+y);
-  var h='<div class="yr-top"><div class="calc setup"><div class="calc-h">'+y+' Setup</div><div class="calc-sub">'+(y===BASE_YEAR?'Starting values for the first year.':'Calculated from '+(y-1)+'; edit to override.')+'</div>'+setupHtml(y,r)+'</div>'+
-    '<div class="tiles">'+tile('Starting Balance',r.start)+tile('PTO Hours Used',r.used)+tile('Ending Balance',r.ending,'end')+tile(ROLL+' Hours Roll Over',r.lastBal-ROLL)+tile('Rollover Remaining',r.lastRo)+'</div></div>';
-  h+='<div class="ledger-bar"><button class="addtrip" data-act="addtrip"'+(draft?' disabled':'')+'>+ Add Trip</button><span class="sp"></span>'+
-     '<button class="cbtn" data-act="export">Export JSON</button><button class="cbtn" data-act="import">Import JSON</button><button class="cbtn" data-act="reset">Reset to Workbook</button></div>';
+  var h='<div class="yr-top"><div class="lcol"><div class="calc setup"><div class="calc-h">'+y+' Setup</div><div class="calc-sub">'+(y===BASE_YEAR?'Starting values for the first year.':'Calculated from '+(y-1)+'; edit to override.')+'</div>'+setupHtml(y,r)+'</div>'+
+    '<button class="addtrip" data-act="addtrip"'+(draft?' disabled':'')+'>+ Add Trip</button></div>'+
+    '<div class="rcol"><div class="tiles">'+tile('Starting Balance',r.start)+tile('PTO Hours Used',r.used)+tile('Ending Balance',r.ending,'end')+tile(ROLL+' Hours Roll Over',r.lastBal-ROLL)+tile('Rollover Remaining',r.lastRo)+'</div><div class="cal" id="cal-'+y+'">'+calHtml(y)+'</div></div></div>';
   if(draft&&draft.y===y)h+=panelHtml();
   h+='<div class="ledger-scroll"><table class="ledger"><thead><tr><th class="c-rng">Dates</th><th class="l">Trip / Day</th><th class="c-hrs">Hours</th><th class="c-st">Status</th><th class="c-bal">Running Balance</th><th class="c-bal">'+ROLL+' Hours<br>Roll Over</th><th class="c-bal">Rollover Remaining</th><th class="c-act"></th></tr></thead><tbody>';
   h+='<tr class="start"><td></td><td class="l">Starting Balance</td><td></td><td>Starting</td><td class="n'+numCls(r.start)+'">'+fmt(r.start)+'</td><td class="n'+numCls(r.start-ROLL)+'">'+fmt(r.start-ROLL)+'</td><td class="n'+numCls(r.roStart)+'">'+fmt(r.roStart)+'</td><td></td></tr>';
@@ -483,6 +507,43 @@ function copyRich(o,btn){
   }else dom();
 }
 
+/* ── 3-month calendar (Q37–Q39) ── */
+var MONL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var calStart={};
+function calDefault(y){var t=new Date();return y===t.getFullYear()?{y:t.getMonth()===0?y-1:y,m:(t.getMonth()+11)%12}:{y:y,m:0};}
+function calInfo(){var o={};S.trips.forEach(function(t,i){t.days.forEach(function(d,j){if(d.status==='Weekend')return;o[d.date]={i:i,j:j,t:t.name,c:TCOL[(t.c==null?i:t.c)%TCOL.length],h:+d.hours||0,s:d.status||''};});});return o;}
+function addMon(a,n){var m=a.m+n;return {y:a.y+Math.floor(m/12),m:((m%12)+12)%12};}
+function calMonth(y,m,info,ti){
+  var h='<div class="cal-m"><div class="mn">'+MONL[m]+' '+y+'</div><div class="cal-g">'+'SMTWTFS'.split('').map(function(x){return '<div class="dw">'+x+'</div>';}).join('');
+  var f=new Date(y,m,1).getDay(),n=new Date(y,m+1,0).getDate(),i;
+  for(i=0;i<f;i++)h+='<div class="d out"></div>';
+  for(var d=1;d<=n;d++){
+    var k=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0'),w=new Date(y,m,d).getDay(),x=info[k];
+    var c='d'+(w===0||w===6?' we':'')+(k===ti?' today':''),at='';
+    if(x){c+=' p'+(x.s==='Holiday'?' hol':'')+(x.h?'':' zero');at=' style="--tc:'+x.c+'" data-ct="'+x.i+'" data-cd="'+x.j+'" title="'+esc(x.t+' · '+fmt(x.h)+' hrs · '+(x.s||'—'))+'"';}
+    h+='<div class="'+c+'"'+at+'>'+d+'</div>';
+  }
+  return h+'</div></div>';
+}
+function calHtml(y){
+  var a=calStart[y]||(calStart[y]=calDefault(y)),info=calInfo(),ti=todayIso(),ms=[a,addMon(a,1),addMon(a,2)];
+  return '<div class="cal-h"><button class="cal-nav" data-cal="-1" title="Previous month">‹</button>'+
+    '<button class="cal-today" data-cal="0">Today</button><button class="cal-nav" data-cal="1" title="Next month">›</button></div>'+
+    '<div class="cal-ms">'+ms.map(function(x){return calMonth(x.y,x.m,info,ti);}).join('')+'</div>'+
+    '<div class="cal-leg"><span><i style="background:color-mix(in srgb,#4589ff 30%,#1c1c1c)"></i>PTO day (trip color)</span><span><i style="background:color-mix(in srgb,#be95ff 22%,#1c1c1c)"></i>Holiday</span><span><i style="box-shadow:inset 0 0 0 1.5px #f1c21b"></i>Today</span></div>';
+}
+function calGo(y,n){
+  if(n===0){var t=new Date();calStart[y]={y:t.getMonth()===0?t.getFullYear()-1:t.getFullYear(),m:(t.getMonth()+11)%12};}  /* Today: last / this / next month */
+  else calStart[y]=addMon(calStart[y]||calDefault(y),n);
+  document.getElementById('cal-'+y).innerHTML=calHtml(y);
+}
+function calJump(i,j){
+  var t=S.trips[i],d=t&&t.days[j];if(!d)return;var y=yr(d.date);
+  if(y!==active&&YEARS.indexOf(y)>-1)show(y);
+  var row=document.querySelector('#page-'+y+' tr.day[data-t="'+i+'"][data-d="'+j+'"]');if(!row)return;
+  row.scrollIntoView({block:'center',behavior:'smooth'});row.classList.remove('flash');void row.offsetWidth;row.classList.add('flash');
+}
+
 /* ── modal ── */
 var mCb=null;
 var mAltCb=null;
@@ -553,6 +614,8 @@ pages.addEventListener('change',function(e){
   commit();
 });
 pages.addEventListener('click',function(e){
+  var cn=e.target.closest('[data-cal]');if(cn){calGo(active,+cn.dataset.cal);return;}
+  var cd=e.target.closest('.d.p[data-ct]');if(cd){calJump(+cd.dataset.ct,+cd.dataset.cd);return;}
   var rs=e.target.closest('[data-reset]');
   if(rs){ysettings(active)[rs.dataset.reset]=null;return commit();}
   var dt=e.target.closest('td.dt');
@@ -589,21 +652,6 @@ pages.addEventListener('click',function(e){
     ask('Delete trip?','“'+(tt.name||'Untitled')+'” and all '+tt.days.length+' of its days (in every year) will be removed.','Delete',function(){S.trips.splice(S.trips.indexOf(tt),1);commit();});
     return;
   }
-  if(act==='export'){
-    var blob=new Blob([JSON.stringify(S,null,1)],{type:'application/json'}), a=document.createElement('a'), n=new Date();
-    a.href=URL.createObjectURL(blob);a.download='AES_PTO_Log_'+n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')+'.json';
-    document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);return;
-  }
-  if(act==='import'){document.getElementById('importFile').click();return;}
-  if(act==='reset'){ask('Reset to saved data?','All unsaved edits in this browser will be replaced with the data stored in this page file (the last Save to GitHub, or the original workbook data). Export first if you want a backup.','Reset',function(){S=clone(PTO_BAKED);base=bakedAt();dirty=false;savedAt=null;persist();renderAll();});return;}
-});
-document.getElementById('importFile').addEventListener('change',function(e){
-  var f=e.target.files[0];if(!f)return;var rd=new FileReader();
-  rd.onload=function(){try{var o=JSON.parse(rd.result);if(!valid(o))throw 0;
-    ask('Import '+f.name+'?','This replaces everything currently on the page with the contents of the file.','Import',function(){S=migrate(o);commit();});}
-    catch(_){ask('Not a PTO Log file','That file could not be read as an AES PTO Log export.','OK',null);}
-    e.target.value='';};
-  rd.readAsText(f);
 });
 
 load();buildShell();
