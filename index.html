@@ -199,6 +199,90 @@ tr.flash td{animation:flash 2.4s ease-out}
 #modal .mb{display:flex;gap:8px;justify-content:flex-end}
 #modal .mb button{font-size:12px;padding:7px 16px}
 
+td.dt span.ds{display:none}
+/* ── Mobile / foldable (S25 Ultra ≈412 · Z Fold 8 cover ≈410 · Fold inner ≈620–680, landscape ≈860) ── */
+@media(max-width:980px){
+  .wrap{padding:16px 12px 60px}
+  .yr-top{grid-template-columns:1fr;position:static;margin-top:0;padding:0}
+  .ledger th{top:0}
+  .ledger-scroll{overflow:visible}
+  /* 16px fields: stops Android/iOS zooming in on tap */
+  .ti,.ti.hrs,.ti.rng,.field input,#tokIn,.ti.date{font-size:16px}
+  .st{font-size:14px;padding:3px 4px}
+  .ti{min-height:38px}
+  .st{height:34px;width:100%}
+  .ib{min-height:36px;min-width:36px;padding:6px 10px;font-size:12px}
+  .cal-nav{width:40px;height:40px;font-size:18px}.cal-today{padding:10px 16px;font-size:12px}
+  .cal-g .d{height:34px;font-size:13px}
+  .blurb-copy.trip-copy{padding:7px 14px;font-size:12px}
+  .addtrip{padding:10px 18px;font-size:14px}
+  .tile{padding:10px 12px}.tile .tv{font-size:22px}
+  .tiles{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+  .savestat{width:100%;text-align:left;display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px}
+  .savestat .gl{margin-top:0;flex:1 1 160px}
+  /* ledger → stacked cards */
+  .ledger,.ledger tbody{display:block}
+  .ledger thead{display:none}
+  .ledger tr{display:grid;border-bottom:1px solid var(--line)}
+  .ledger td{border:none;padding:3px 8px;text-align:left}
+  .ledger tr td{background:none!important;box-shadow:none!important}
+  tr.start{background:#E1AD01;grid-template-columns:repeat(3,minmax(0,1fr));padding:6px 4px}
+  tr.start td:nth-child(1),tr.start td:nth-child(3),tr.start td:nth-child(4),tr.start td:nth-child(8){display:none}
+  tr.start td.l{grid-column:1/-1;font-size:15px}
+  tr.trip{grid-template-columns:minmax(0,1fr) auto;background:color-mix(in srgb,var(--tc) 16%,#1c1c1c);box-shadow:inset 4px 0 0 var(--tc);padding:6px 2px 8px;margin-top:10px;border-top:1px solid color-mix(in srgb,var(--tc) 40%,transparent)}
+  tr.trip td:nth-child(1){grid-column:1;grid-row:1;align-self:center}
+  tr.trip td:nth-child(8){grid-column:2;grid-row:1}
+  tr.trip td:nth-child(2){grid-column:1/-1;grid-row:2}
+  tr.trip td:nth-child(n+3):nth-child(-n+7){display:none}
+  tr.trip .ti.rng{text-align:left;font-size:15px;padding-left:4px}
+  .tname{flex-wrap:wrap;gap:6px 8px}.tname .ti{font-size:17px;min-width:0;max-width:100%}
+  tr.day{grid-template-columns:repeat(3,minmax(0,1fr)) 54px 112px 44px;box-shadow:inset 4px 0 0 color-mix(in srgb,var(--tc) 50%,transparent);padding:4px 0 6px}
+  tr.day td:nth-child(1){display:none}
+  tr.day td.dt{grid-column:1/4;grid-row:1;align-self:center;font-size:15px}
+  tr.day td:nth-child(3){grid-column:4;grid-row:1}
+  tr.day td:nth-child(4){grid-column:5;grid-row:1}
+  tr.day td:nth-child(8){grid-column:6;grid-row:1/3;align-self:center}
+  tr.day td:nth-child(5){grid-column:1;grid-row:2}tr.day td:nth-child(6){grid-column:2;grid-row:2}tr.day td:nth-child(7){grid-column:3;grid-row:2}
+  tr.day td.n,tr.start td.n{font-size:13px;line-height:1.2;padding-top:0}
+  tr.day td.n::before,tr.start td.n::before{white-space:nowrap;display:block;font:700 8.5px var(--ui);letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:1px}
+  tr.start td.n::before{color:#3a2c00}
+  tr.day td:nth-child(5)::before,tr.start td:nth-child(5)::before{content:'Balance'}
+  tr.day td:nth-child(6)::before,tr.start td:nth-child(6)::before{content:'Roll Over'}
+  tr.day td:nth-child(7)::before,tr.start td:nth-child(7)::before{content:'Remaining'}
+  td.dt span.dl{display:none}td.dt span.ds{display:inline-block}
+  td.dt .nf-warn{display:block;margin:0 0 0 6px}
+  .ti.hrs{padding:6px 2px}
+  /* Add Trip panel rows */
+  .newtrip tr.trip{grid-template-columns:1fr;margin-top:0}
+  .newtrip tr.trip td:nth-child(n+3){display:none}
+  .newtrip tr.trip td:nth-child(1){grid-row:1}.newtrip tr.trip td:nth-child(2){grid-row:2}
+  .newtrip tr.day{grid-template-columns:minmax(0,1fr) 48px 92px 44px}
+  .newtrip tr.day .ti.date{padding:4px 2px}
+  .newtrip tr.day td:nth-child(2){grid-column:1;grid-row:1}
+  .newtrip tr.day td:nth-child(3){grid-column:2;grid-row:1}.newtrip tr.day td:nth-child(4){grid-column:3;grid-row:1}
+  .newtrip tr.day td:nth-child(5){grid-column:4;grid-row:1;display:block;align-self:center}
+  .newtrip tr.day td:nth-child(5)::before{content:none!important}
+  .newtrip tr.day td:nth-child(2) span{display:block;margin:2px 0 0 4px}
+  .newtrip tr.day .ti.date{width:100%}
+  .nt-actions .cbtn{padding:10px 16px;font-size:13px}
+}
+/* ── Phones / Fold cover (≤480) ── */
+@media(max-width:480px){
+  header.masthead{align-items:flex-start;gap:10px;padding-bottom:12px}
+  .brand{gap:10px}.brand .logo{height:40px}
+  header.masthead .brand h1{font-size:24px;line-height:1.05}
+  .brand .sub{font-size:9px;letter-spacing:.12em;margin-top:4px}
+  .savestat{width:100%;text-align:left;display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px}
+  .savestat .gl{margin-top:0;flex:1 1 160px}
+  .savestat .ghbtn{padding:10px 16px;font-size:13px}
+  .tab{padding:10px 18px 12px;font-size:14px}
+  .tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .tile{padding:8px 9px;gap:2px}.tile .tl{font-size:8.5px;letter-spacing:.06em}.tile .tv{font-size:19px}.tile .tv small{font-size:9px;margin-left:2px}
+  .setup-grid{gap:10px 12px}.field{width:calc(50% - 6px);min-width:0}
+  tr.day{grid-template-columns:repeat(3,minmax(0,1fr)) 46px 100px 40px}
+  .st{font-size:14px;padding:3px 4px}
+  .ti.hrs{font-size:16px}
+}
 @media(max-width:760px){.brand h1{font-size:30px}.tabbar{position:static}.yr-top{position:static;margin-top:0;padding:0}.ledger th{top:0}.wrap{padding:20px 16px 60px}.ledger-scroll{overflow-x:auto}}
 </style>
 </head>
@@ -256,6 +340,7 @@ function fmt(n){if(n==null||n==='')return '';n=Math.round(n*100)/100;return Stri
 function numCls(n){return n<0?' neg':'';}
 function longDate(iso){var p=iso.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]);
   return d.toLocaleDateString('en-US',{weekday:'long'})+', '+d.toLocaleDateString('en-US',{month:'long'})+' '+p[2]+', '+p[0];}
+function shortDate(iso){var p=iso.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]);return d.toLocaleDateString('en-US',{weekday:'short'})+', '+d.toLocaleDateString('en-US',{month:'short'})+' '+p[2];}
 function addDays(iso,n){var p=iso.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]+n);
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function yr(iso){return +iso.slice(0,4);}
@@ -400,7 +485,7 @@ function stickyMetrics(){
   st.setProperty('--tabH',tabH+'px');
   st.setProperty('--hdrH',(fixed&&yt&&getComputedStyle(yt).position==='sticky'?tabH+yt.offsetHeight:0)+'px');
 }
-window.addEventListener('resize',stickyMetrics);
+var lastCalN=null;window.addEventListener('resize',function(){stickyMetrics();var n=calCount();if(n!==lastCalN){lastCalN=n;YEARS.forEach(function(y){var el=document.getElementById('cal-'+y);if(el)el.innerHTML=calHtml(y);});}});
 if(window.ResizeObserver)new ResizeObserver(stickyMetrics).observe(document.getElementById('pages'));
 
 function setupHtml(y,r){
@@ -441,7 +526,7 @@ function render(y){
     g.rows.forEach(function(x){
       var st=x.d.status||'';
       h+='<tr class="day'+(st==='Cancelled'?' cx':'')+'" style="--tc:'+tc+'" data-t="'+g.i+'" data-d="'+x.j+'"><td></td>'+
-        '<td class="l dt"><span>'+esc(longDate(x.d.date))+'</span>'+nfWarn(t.name,x.d.date)+'<input type="date" data-f="date" value="'+x.d.date+'"></td>'+
+        '<td class="l dt"><span class="dl">'+esc(longDate(x.d.date))+'</span><span class="ds">'+esc(shortDate(x.d.date))+'</span>'+nfWarn(t.name,x.d.date)+'<input type="date" data-f="date" value="'+x.d.date+'"></td>'+
         '<td><input class="ti hrs" type="number" step="any" data-f="hours" value="'+fmt(x.d.hours)+'"></td>'+
         '<td><select class="st'+(st?'':' empty')+'" data-f="status" style="--sc:'+(SCOL[st]||'')+'"><option value="">—</option>'+
           STATUSES.concat(st&&STATUSES.indexOf(st)<0?[st]:[]).map(function(o){return '<option'+(o===st?' selected':'')+'>'+esc(o)+'</option>';}).join('')+'</select></td>'+
@@ -547,7 +632,7 @@ function copyRich(o,btn){
 /* ── 3-month calendar (Q37–Q39) ── */
 var MONL=['January','February','March','April','May','June','July','August','September','October','November','December'];
 var calStart={};
-function calDefault(y){var t=new Date();return y===t.getFullYear()?{y:t.getMonth()===0?y-1:y,m:(t.getMonth()+11)%12}:{y:y,m:0};}
+function calDefault(y){var t=new Date();return y===t.getFullYear()?{y:t.getMonth()===0?y-1:y,m:(t.getMonth()+11)%12}:(calCount()===3?{y:y,m:0}:{y:y-1,m:11});}  /* phones/Fold: other years open on January */
 function calInfo(){var o={};S.trips.forEach(function(t,i){var c=tripColor(t,i);t.days.forEach(function(d,j){o[d.date]={i:i,j:j,t:t.name,c:c,h:+d.hours||0,s:d.status||''};});});return o;}
 function addMon(a,n){var m=a.m+n;return {y:a.y+Math.floor(m/12),m:((m%12)+12)%12};}
 function calMonth(y,m,info,ti){
@@ -562,11 +647,12 @@ function calMonth(y,m,info,ti){
   }
   return h+'</div></div>';
 }
+function calCount(){var w=Math.min(window.innerWidth,document.documentElement.clientWidth||window.innerWidth);return w<=560?1:w<=900?2:3;}
 function calHtml(y){
-  var a=calStart[y]||(calStart[y]=calDefault(y)),info=calInfo(),ti=todayIso(),ms=[a,addMon(a,1),addMon(a,2)];
+  var a=calStart[y]||(calStart[y]=calDefault(y)),info=calInfo(),ti=todayIso(),n=calCount(),ms=n===3?[a,addMon(a,1),addMon(a,2)]:n===2?[addMon(a,1),addMon(a,2)]:[addMon(a,1)];
   return '<div class="cal-h"><button class="cal-nav" data-cal="-1" title="Previous month">‹</button>'+
     '<button class="cal-today" data-cal="0">Today</button><button class="cal-nav" data-cal="1" title="Next month">›</button></div>'+
-    '<div class="cal-ms">'+ms.map(function(x){return calMonth(x.y,x.m,info,ti);}).join('')+'</div>'+
+    '<div class="cal-ms" style="grid-template-columns:repeat('+ms.length+',1fr)">'+ms.map(function(x){return calMonth(x.y,x.m,info,ti);}).join('')+'</div>'+
     '<div class="cal-leg"><span><i style="background:color-mix(in srgb,#4589ff 30%,#1c1c1c)"></i>Trip day (trip color)</span><span><i style="background:color-mix(in srgb,#D2042D 30%,#1c1c1c)"></i>PTO Burndown</span><span><i style="box-shadow:inset 0 0 0 1.5px #f1c21b"></i>Today</span></div>';
 }
 function calGo(y,n){
