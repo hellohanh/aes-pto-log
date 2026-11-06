@@ -168,6 +168,9 @@ td.dt.edit span{display:none}
 .cal-g .d.p{background:color-mix(in srgb,var(--tc) 30%,#1c1c1c);color:#fff;font-weight:700;cursor:pointer}
 .cal-g .d.p:hover{outline:1px solid var(--tc)}
 .cal-g .d.p.zero{background:color-mix(in srgb,var(--tc) 12%,#1c1c1c);color:var(--ink-soft);font-weight:600}
+.cal-g .d.ping{animation:calPing 1.6s ease-out}
+@keyframes calPing{0%,40%{box-shadow:0 0 0 3px var(--cp-yellow);transform:scale(1.12)}100%{box-shadow:0 0 0 0 transparent;transform:none}}
+.ledger-scroll tr.day,.ledger-scroll tr.trip{cursor:pointer}
 .cal-g .d.today{box-shadow:inset 0 0 0 1.5px var(--cp-yellow);color:var(--cp-yellow);font-weight:800}
 .cal-leg{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:10.5px;color:var(--ink-soft)}
 .cal-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
@@ -642,7 +645,7 @@ function calMonth(y,m,info,ti){
   for(var d=1;d<=n;d++){
     var k=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0'),w=new Date(y,m,d).getDay(),x=info[k];
     var c='d'+(w===0||w===6?' we':'')+(k===ti?' today':''),at='';
-    if(x){c+=' p'+(!x.h&&x.s!=='Holiday'&&x.s!=='Weekend'&&w!==0&&w!==6?' zero':'');at=' style="--tc:'+x.c+'" data-ct="'+x.i+'" data-cd="'+x.j+'" title="'+esc(x.t+' · '+fmt(x.h)+' hrs · '+(x.s||'—'))+'"';}
+    if(x){c+=' p'+(!x.h&&x.s!=='Holiday'&&x.s!=='Weekend'&&w!==0&&w!==6?' zero':'');at=' style="--tc:'+x.c+'" data-iso="'+k+'" data-ct="'+x.i+'" data-cd="'+x.j+'" title="'+esc(x.t+' · '+fmt(x.h)+' hrs · '+(x.s||'—'))+'"';}
     h+='<div class="'+c+'"'+at+'>'+d+'</div>';
   }
   return h+'</div></div>';
@@ -659,6 +662,18 @@ function calGo(y,n){
   if(n===0){var t=new Date();calStart[y]={y:t.getMonth()===0?t.getFullYear()-1:t.getFullYear(),m:(t.getMonth()+11)%12};}  /* Today: last / this / next month */
   else calStart[y]=addMon(calStart[y]||calDefault(y),n);
   document.getElementById('cal-'+y).innerHTML=calHtml(y);
+}
+/* Click a ledger row → calendar centers that month (Q50). 3 months: clicked month in the middle; 2/1 months: clicked month first. */
+function calFocus(iso){
+  if(!iso)return;var p=iso.split('-'),y=active;
+  calStart[y]=addMon({y:+p[0],m:+p[1]-1},-1);
+  var el=document.getElementById('cal-'+y);if(!el)return;el.innerHTML=calHtml(y);
+  var c=el.querySelector('.d[data-iso="'+iso+'"]');if(c){c.classList.remove('ping');void c.offsetWidth;c.classList.add('ping');}
+}
+function rowDate(tr){
+  var t=S.trips[+tr.dataset.t];if(!t)return '';
+  if(tr.classList.contains('day')){var d=t.days[+tr.dataset.d];return d?d.date:'';}
+  var mine=t.days.map(function(d){return d.date;}).filter(function(x){return yr(x)===active;}).sort();return mine[0]||'';
 }
 function calJump(i,j){
   var t=S.trips[i],d=t&&t.days[j];if(!d)return;var y=yr(d.date);
@@ -737,6 +752,8 @@ pages.addEventListener('change',function(e){
   commit();
 });
 pages.addEventListener('click',function(e){
+  var lr=e.target.closest('.ledger-scroll tr.day,.ledger-scroll tr.trip');
+  if(lr&&!e.target.closest('[data-act]'))calFocus(rowDate(lr));
   var cn=e.target.closest('[data-cal]');if(cn){calGo(active,+cn.dataset.cal);return;}
   var cd=e.target.closest('.d.p[data-ct]');if(cd){calJump(+cd.dataset.ct,+cd.dataset.cd);return;}
   var rs=e.target.closest('[data-reset]');
